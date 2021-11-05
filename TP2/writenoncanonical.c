@@ -75,7 +75,7 @@ int read_ua() {
     return 0;
 }
 
-void nothing(int _) {
+void sigalrm_hadler(int _) {
     printf("handler reached\n");
     interrupt = 1;
 }
@@ -143,13 +143,12 @@ int main(int argc, char** argv)
 
 
     int done = 0;
-    while(!done) {
+    while(interrupt_count < MAX_ATTEMPTS) {
         send_set();
-        interrupt_count++;
         printf("HERE1\n");
-        signal(SIGALRM, nothing);
+        signal(SIGALRM, sigalrm_hadler);
         alarm(3);
-        if(read_ua() == 0 || interrupt_count == MAX_ATTEMPTS) done = 1;
+        if(read_ua() != 0) interrupt_count++;
     }
     
     if (interrupt_count == MAX_ATTEMPTS) puts("INTERRUPTED - REACHED MAX TRIES");
