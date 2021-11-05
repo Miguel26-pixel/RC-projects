@@ -5,6 +5,9 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #define BAUDRATE B38400
 #define MODEMDEVICE "/dev/ttyS1"
@@ -23,7 +26,9 @@ int main(int argc, char** argv)
     
     if ( (argc < 2) || 
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS4", argv[1])!=0) )) {
+  	      (strcmp("/dev/ttyS4", argv[1])!=0) && 
+  	      (strcmp("/dev/ttyS10", argv[1])!=0) && 
+  	      (strcmp("/dev/ttyS11", argv[1])!=0) )) {
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
       exit(1);
     }
@@ -58,7 +63,7 @@ int main(int argc, char** argv)
 
   /* 
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-    leitura do(s) próximo(s) caracter(es)
+    leitura do(s) prï¿½ximo(s) caracter(es)
   */
 
 
@@ -79,17 +84,17 @@ int main(int argc, char** argv)
     }
     
     /*testing*/
-    buf[5] = '\0';
+    //buf[5] = '\0';
     
-    //buf[255]='\0';
+    buf[254]='\0';
     
     res = write(fd,buf,255);   
-    printf("%d bytes written\n", res);
+    printf("%d bytes written\n", strlen(buf));
  
 
   /* 
-    O ciclo FOR e as instruções seguintes devem ser alterados de modo a respeitar 
-    o indicado no guião 
+    O ciclo FOR e as instruï¿½ï¿½es seguintes devem ser alterados de modo a respeitar 
+    o indicado no guiï¿½o 
   */
 
 
@@ -97,7 +102,7 @@ int main(int argc, char** argv)
     
     while (STOP==FALSE) {       /* loop for input */
       res = read(fd,buf,1);   /* returns after 5 chars have been input */
-      if (buf[0]=='\0') STOP=TRUE;
+      if (buf[0]=='\0') break;
       buf[res]=0;               /* so we can printf... */
       printf(":%s:%d\n", buf, res);
     }
