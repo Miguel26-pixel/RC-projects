@@ -27,7 +27,6 @@
 volatile int STOP=FALSE;
 int fd;
 int interrupt;
-int interrupt_count = 0;
 
 int send_set() {
     interrupt = 0;
@@ -60,7 +59,7 @@ int read_ua() {
     if (m != F) puts("ERROR FLAG");
     
     alarm(0);
-    
+
     res = read(fd, &a, 1); 
     if (a != ARE) puts("ERROR A"); 
       
@@ -79,7 +78,6 @@ int read_ua() {
 void nothing(int _) {
     printf("handler reached\n");
     interrupt = 1;
-    interrupt_count++;
 }
 
 
@@ -88,7 +86,7 @@ int main(int argc, char** argv)
     int res;
     struct termios oldtio,newtio;
     char buf[255];
-    int i, sum = 0, speed = 0;
+    int i, sum = 0, speed = 0, interrupt_count = 0;
     
     if ( (argc < 2) || 
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
@@ -147,6 +145,7 @@ int main(int argc, char** argv)
     int done = 0;
     while(!done) {
         send_set();
+        interrupt_count++;
         printf("HERE1\n");
         signal(SIGALRM, nothing);
         alarm(3);
