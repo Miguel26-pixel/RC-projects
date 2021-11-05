@@ -142,13 +142,13 @@ int main(int argc, char** argv)
     printf("New termios structure set\n");
 
 
-    int done = 0;
-    while(interrupt_count < MAX_ATTEMPTS) {
+    int done = 1;
+    while(interrupt_count < MAX_ATTEMPTS && done != 0) {
         send_set();
         printf("HERE1\n");
         signal(SIGALRM, sigalrm_hadler);
         alarm(3);
-        if(read_ua() != 0) interrupt_count++;
+        if((done = read_ua()) != 0) interrupt_count++; else break;
     }
     
     if (interrupt_count == MAX_ATTEMPTS) puts("INTERRUPTED - REACHED MAX TRIES");
