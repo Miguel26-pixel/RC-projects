@@ -16,6 +16,7 @@
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE 1
+#define MAX_ATTEMPTS 3
 
 #define F   0x7E
 #define AER 0x03
@@ -25,7 +26,11 @@
 
 volatile int STOP=FALSE;
 int fd;
+int interrupt;
+int interrupt_count = 0;
+
 int send_set() {
+    interrupt = 0;
     int res;
     char m;
 
@@ -50,12 +55,12 @@ int send_set() {
 int read_ua() {
     int res;
     char a, c, m;
-    printf("HERE2\n");
-    res = read(fd, &m, 1);
-    if (res < 0) return 1;
+    while (!((res = read(fd, &m, 1)) > 0 || interrupt == 1)) { }
+    if (res <= 0) return 1;
     if (m != F) puts("ERROR FLAG");
     
     alarm(0);
+    
     res = read(fd, &a, 1); 
     if (a != ARE) puts("ERROR A"); 
       
@@ -66,21 +71,15 @@ int read_ua() {
     if (m != (char) (a ^ c)) puts("ERROR BCC");
     
     res = read(fd, &m, 1);
-    if (m != F) puts("ERROR FLAG");  
+    if (m != F) puts("ERROR FLAG"); 
     
     return 0;
 }
 
-void do_stuff(int _) {
-    printf("HERE\n");
-    send_set();
-    (void) signal(SIGALRM, do_stuff);
-    alarm(3); 
-    read_ua();
-}
-
 void nothing(int _) {
-    printf("nothing\n");
+    printf("handler reached\n");
+    interrupt = 1;
+    interrupt_count++;
 }
 
 
@@ -93,7 +92,9 @@ int main(int argc, char** argv)
     
     if ( (argc < 2) || 
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS4", argv[1])!=0) )) {
+  	      (strcmp("/dev/ttyS4", argv[1])!=0) && 
+  	      (strcmp("/dev/ttyS10", argv[1])!=0) && 
+  	      (strcmp("/dev/ttyS11", argv[1])!=0))) {
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
       exit(1);
     }
@@ -128,7 +129,7 @@ int main(int argc, char** argv)
 
   /* 
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-    leitura do(s) próximo(s) caracter(es)
+    leitura do(s) prï¿½ximo(s) caracter(es)
   */
 
 
@@ -145,14 +146,14 @@ int main(int argc, char** argv)
 
     int done = 0;
     while(!done) {
-        printf("HERE\n");
         send_set();
         printf("HERE1\n");
         signal(SIGALRM, nothing);
         alarm(3);
-        if(read_ua() == 0) done = 1;
+        if(read_ua() == 0 || interrupt_count == MAX_ATTEMPTS) done = 1;
     }
     
+    if (interrupt_count == MAX_ATTEMPTS) puts("INTERRUPTED - REACHED MAX TRIES");
     
     sleep(1);
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
