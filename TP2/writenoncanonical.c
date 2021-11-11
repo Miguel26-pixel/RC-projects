@@ -52,24 +52,31 @@ int send_set() {
 }
 
 int read_ua() {
+
     int res;
     char a, c, m;
     while (!((res = read(fd, &m, 1)) > 0 || interrupt == 1)) { }
     if (res <= 0) return 1;
     if (m != F) puts("ERROR FLAG");
+
+    printf("res - %d m - %c\n",res,m);
     
     alarm(0);
 
     res = read(fd, &a, 1); 
+    printf("res - %d m - %c\n",res,m);
     if (a != ARE) puts("ERROR A"); 
       
-    res = read(fd, &c, 1); ;
+    res = read(fd, &c, 1);
+    printf("res - %d m - %c\n",res,m);
     if (c != UA) puts("ERROR C"); 
       
     res = read(fd, &m, 1); 
+    printf("res - %d m - %c\n",res,m);
     if (m != (char) (a ^ c)) puts("ERROR BCC");
     
     res = read(fd, &m, 1);
+    printf("res - %d m - %c\n",res,m);
     if (m != F) puts("ERROR FLAG"); 
     
     return 0;
@@ -139,7 +146,7 @@ int main(int argc, char** argv)
       exit(-1);
     }
 
-    printf("New termios structure set\n");
+    printf("New termios structure settt\n");
 
 
     int done = 1;
@@ -154,6 +161,7 @@ int main(int argc, char** argv)
     if (interrupt_count == MAX_ATTEMPTS) puts("INTERRUPTED - REACHED MAX TRIES");
     
     sleep(1);
+    
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);

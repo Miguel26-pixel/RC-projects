@@ -67,16 +67,13 @@ int readI(int fd) {
     if (c != C0 ){ if (c != C1) puts("ERROR Casd"); }
     res = read(fd, &m, 1);
  
-    if (m != (char)(a ^ c)) puts("ERROR BCC");   
-    
-    printf("passei\n");    
+    if (m != (char)(a ^ c)) puts("ERROR BCC");     
 
     int count = 0;
     unsigned char bcc2 = 0;
     do { 
        res = read(fd, &m, 1);
        buf[count] = m;
-       printf("%c\n",m);
        count++;
     } while (m != F);
 
@@ -88,7 +85,7 @@ int readI(int fd) {
 
     if (buf[count - 1] != F) puts("ERROR F2");
     
-    printf("ao pequeno almoco como que? como piças\n");
+    printf("READ I DONE\n");
 
     if (c == C0) { return 0; } else { return 1; }
 }
@@ -107,7 +104,7 @@ int writeSU(int fd, char c) {
     m = F;
     res = write(fd, &m, 1);
     
-    printf("everything okeie send UA\n");
+    printf("SEND ANSWER DONE\n");
 }
 
 int main(int argc, char** argv)
@@ -177,9 +174,10 @@ int main(int argc, char** argv)
     int r = readI(fd);
 
     if (r == 0) {
-        printf("ENVIAR RR1\n");
+        printf("ANSWER = RR1\n");
         writeSU(fd,RR1);
     } else {
+        printf("ANSWER = RR0\n");
         writeSU(fd,RR0);
     }
 

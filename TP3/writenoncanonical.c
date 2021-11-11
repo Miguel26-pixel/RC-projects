@@ -105,7 +105,6 @@ int send_i(const unsigned char *d, size_t nb, unsigned n) {
     m = 0;
     for (int i = 0; i < nb; ++i) {
         res = write(fd, d + i, 1);
-        printf("%c\n", d[i]);
         m ^= d[i];
     }
 
@@ -189,7 +188,7 @@ int read_rr(int n) {
       
     res = read(fd, &m, 1);
     
-    if (m != (char) (a ^ c)) puts("ERROR BCC");
+    if (m != (a ^ c)) printf("ERROR BCC: a - %x, c - %x, xor - %x, m - %x, bool - %d\n",a,c,(char) a^c,m, (char) (a^c) == (char) m);
     
     res = read(fd, &m, 1);
     if (m != F) puts("ERROR FLAG"); 
@@ -263,7 +262,7 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-/*
+
     int done = 1;
     while(interrupt_count < MAX_ATTEMPTS && done != 0) {
         send_set();
@@ -276,12 +275,8 @@ int main(int argc, char** argv)
     if (interrupt_count == MAX_ATTEMPTS) puts("INTERRUPTED - REACHED MAX TRIES");
     
     puts("SET DONE");
-    */
-    unsigned char s[4];
-    s[0] = 'A';
-    s[1] = 'B';
-    s[2] = 'C';
-    s[3] = '\0';
+    
+    unsigned char s[] = "HelloWorld";
     send_i(s, sizeof(s), 0);
     puts("I DONE");
     read_rr(1);
