@@ -167,9 +167,9 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-	//readSET(fd);
+	  readSET(fd);
     
-    //writeSU(fd,UA);
+    writeSU(fd,UA);
 
     int r = readI(fd);
 

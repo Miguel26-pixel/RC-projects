@@ -117,59 +117,6 @@ int send_i(const unsigned char *d, size_t nb, unsigned n) {
     return 0;
 }
 
-int read_i(unsigned char *d, unsigned nb, unsigned n) {
-    int res;
-    unsigned char a, c, m;
-    while (!((res = read(fd, &m, 1)) > 0 || interrupt == 1)) { }
-    if (res <= 0) return 1;
-    if (m != F) puts("ERROR FLAG");
-    
-    alarm(0);
-
-    res = read(fd, &a, 1); 
-    if (a != ARE) puts("ERROR A"); 
-  
-    res = read(fd, &c, 1); ;
-    if (c != (unsigned char)(n == 0 ? CI0 : CI1)) puts("ERROR C"); 
-  
-    res = read(fd, &m, 1); 
-    if (m != (unsigned char) (a ^ c)) puts("ERROR BCC");
-
-    unsigned int i = 0;
-
-    unsigned char c1 = 0, c2 = 0, bcc2 = 0;
-    unsigned char ran = 0;
-    while(1) {
-    
-       if (ran) d[i++] = c2;
-    
-       res = read(fd, &c1, 1);
-       if (c1 == F) {
-        bcc2 = c2; // c2 anterior
-        break;
-       }
-       
-       res = read(fd, &c2, 1);
-       if (c2 == F) {
-        bcc2 = c1;
-        break;
-       }
-       
-       d[i++] = c1;
-       ran = 1;
-    }
-
-    unsigned char bcc = 0;
-    for (int j = 0; j < i; ++j) bcc ^= d[j];
-
-    if (bcc != bcc2) puts("ERROR FLAG");
-
-    res = read(fd, &m, 1);
-    if (m != F) puts("ERROR FLAG");
-    
-    return 0;
-}
-
 
 int read_rr(int n) {
     int res;
@@ -197,10 +144,8 @@ int read_rr(int n) {
 }
 
 void sigalrm_hadler(int _) {
-    printf("handler reached\n");
     interrupt = 1;
 }
-
 
 int main(int argc, char** argv)
 {
@@ -280,7 +225,7 @@ int main(int argc, char** argv)
     send_i(s, sizeof(s), 0);
     puts("I DONE");
     read_rr(1);
-    puts("RR DONE");
+    puts("RR1 DONE");
     
     sleep(1);
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
@@ -291,3 +236,56 @@ int main(int argc, char** argv)
     close(fd);
     return 0;
 }
+
+/*int read_i(unsigned char *d, unsigned nb, unsigned n) {
+    int res;
+    unsigned char a, c, m;
+    while (!((res = read(fd, &m, 1)) > 0 || interrupt == 1)) { }
+    if (res <= 0) return 1;
+    if (m != F) puts("ERROR FLAG");
+    
+    alarm(0);
+
+    res = read(fd, &a, 1); 
+    if (a != ARE) puts("ERROR A"); 
+  
+    res = read(fd, &c, 1); ;
+    if (c != (unsigned char)(n == 0 ? CI0 : CI1)) puts("ERROR C"); 
+  
+    res = read(fd, &m, 1); 
+    if (m != (unsigned char) (a ^ c)) puts("ERROR BCC");
+
+    unsigned int i = 0;
+
+    unsigned char c1 = 0, c2 = 0, bcc2 = 0;
+    unsigned char ran = 0;
+    while(1) {
+    
+       if (ran) d[i++] = c2;
+    
+       res = read(fd, &c1, 1);
+       if (c1 == F) {
+        bcc2 = c2; // c2 anterior
+        break;
+       }
+       
+       res = read(fd, &c2, 1);
+       if (c2 == F) {
+        bcc2 = c1;
+        break;
+       }
+       
+       d[i++] = c1;
+       ran = 1;
+    }
+
+    unsigned char bcc = 0;
+    for (int j = 0; j < i; ++j) bcc ^= d[j];
+
+    if (bcc != bcc2) puts("ERROR FLAG");
+
+    res = read(fd, &m, 1);
+    if (m != F) puts("ERROR FLAG");
+    
+    return 0;
+}*/
