@@ -42,7 +42,7 @@ int read_set(void) {
     if (c != SET) puts("ERROR C");
     res = read(fd, &m, 1);
 
-    if (m != (char) (a ^ c)) puts("ERROR BCC");
+    if (m != (unsigned char) (a ^ c)) puts("ERROR BCC");
     res = read(fd, &m, 1);
 
     if (m != F) puts("ERROR FLAG");

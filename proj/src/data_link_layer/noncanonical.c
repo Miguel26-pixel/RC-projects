@@ -29,7 +29,7 @@ int interrupt;
 
 int readI(int fd) {
     ssize_t res;
-    char m, a, c;
+    unsigned char m, a, c;
     unsigned char buf[255];
     res = read(fd, &m, 1);
 
@@ -42,7 +42,7 @@ int readI(int fd) {
     if (c != CI0) { if (c != CI1) puts("ERROR Casd"); }
     res = read(fd, &m, 1);
 
-    if (m != (char) (a ^ c)) puts("ERROR BCC");
+    if (m != (unsigned char) (a ^ c)) puts("ERROR BCC");
 
     int count = 0;
     unsigned char bcc2 = 0;
@@ -68,7 +68,7 @@ int readI(int fd) {
 int main(int argc, char **argv) {
     int res;
     unsigned char m;
-    struct termios oldtio, newtio;
+    struct termios oldtio;
     unsigned char buf[255];
 
     open_serial_port(argc, argv, &oldtio);

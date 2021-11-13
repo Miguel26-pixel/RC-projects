@@ -85,8 +85,8 @@ int read_rr(int n) {
     res = read(fd, &m, 1);
 
     if (m != (a ^ c))
-        printf("ERROR BCC: a - %x, c - %x, xor - %x, m - %x, bool - %d\n", a, c, (char) a ^ c, m,
-               (char) (a ^ c) == (char) m);
+        printf("ERROR BCC: a - %x, c - %x, xor - %x, m - %x, bool - %d\n", a, c, (unsigned char) a ^ c, m,
+               (unsigned char) (a ^ c) == (unsigned char) m);
 
     res = read(fd, &m, 1);
     if (m != F) puts("ERROR FLAG");
