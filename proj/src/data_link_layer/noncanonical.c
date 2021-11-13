@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "include/write.h"
 
@@ -26,10 +27,7 @@
 #define REJ0 0x01
 #define REJ1 0x81
 
-#define FALSE 0
-#define TRUE 1
-
-volatile int STOP = FALSE;
+volatile int STOP = false;
 
 int fd;
 int interrupt;

@@ -14,6 +14,8 @@
 #include "include/alarm.h"
 #include "include/setup.h"
 
+#include <stdbool.h>
+
 #define _GNU_SOURCE
 
 #define F   0x7E
@@ -31,10 +33,7 @@
 #define REJ0 0x01
 #define REJ1 0x81
 
-#define FALSE 0
-#define TRUE 1
-
-volatile int STOP = FALSE;
+volatile int STOP = false;
 int fd;
 int interrupt;
 
