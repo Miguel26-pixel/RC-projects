@@ -2,7 +2,7 @@
 
 extern int interrupt;
 
-int setupAlarm() {
+int setupAlarm(void) {
     struct sigaction action;
     action.sa_handler = sigalrm_hadler;
     sigemptyset(&action.sa_mask);

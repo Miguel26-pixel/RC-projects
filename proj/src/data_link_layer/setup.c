@@ -52,7 +52,7 @@ int closeSerialPort(struct termios *oldtio) {
 }
 
 
-int connectToReader() {
+int connectToReader(void) {
     int done = 1, interrupt_count = 0;
 
     while (interrupt_count < MAX_ATTEMPTS && done != 0) {
@@ -70,7 +70,7 @@ int connectToReader() {
     return 0;
 }
 
-int connectToWriter() {
+int connectToWriter(void) {
     read_set();
     send_SU(UA);
 }

@@ -24,6 +24,6 @@ int openSerialPort(int argc, char **argv, struct termios *oldtio);
 
 int closeSerialPort(struct termios *oldtio);
 
-int connectToReader();
+int connectToReader(void);
 
-int connectToWriter();
+int connectToWriter(void);

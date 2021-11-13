@@ -26,6 +26,6 @@
 
 extern int fd, interrupt;
 
-int send_set();
+int send_set(void);
 
 int send_SU(unsigned char c);

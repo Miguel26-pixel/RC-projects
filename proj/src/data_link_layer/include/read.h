@@ -26,6 +26,6 @@
 
 extern int fd, interrupt;
 
-int read_set();
+int read_set(void);
 
-int read_ua();
+int read_ua(void);

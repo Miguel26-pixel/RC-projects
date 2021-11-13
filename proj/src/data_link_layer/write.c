@@ -1,6 +1,6 @@
 #include "include/write.h"
 
-int send_set() {
+int send_set(void) {
     interrupt = 0;
     int res;
     unsigned char m;

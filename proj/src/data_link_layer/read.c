@@ -1,6 +1,6 @@
 #include "include/read.h"
 
-int read_ua() {
+int read_ua(void) {
     int res;
     unsigned char a, c, m;
     res = read(fd, &m, 1);
@@ -24,7 +24,7 @@ int read_ua() {
     return 0;
 }
 
-int read_set() {
+int read_set(void) {
     int res;
     unsigned char m, a, c;
     res = read(fd, &m, 1);
