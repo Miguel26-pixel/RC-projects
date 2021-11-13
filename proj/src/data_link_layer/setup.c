@@ -22,7 +22,7 @@
 extern int fd;
 
 
-int openSerialPort(int argc, char **argv, struct termios *oldtio) {
+int open_serial_port(int argc, char **argv, struct termios *oldtio) {
     if (argc < 2 || argc > 2) {
         printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
         exit(1);
@@ -63,7 +63,7 @@ int openSerialPort(int argc, char **argv, struct termios *oldtio) {
     return 0;
 }
 
-int closeSerialPort(struct termios *oldtio) {
+int close_serial_port(struct termios *oldtio) {
     sleep(1);
     if (tcsetattr(fd, TCSANOW, oldtio) == -1) {
         perror("tcsetattr");
@@ -74,7 +74,7 @@ int closeSerialPort(struct termios *oldtio) {
 }
 
 
-int connectToReader(void) {
+int connect_to_reader(void) {
     int done = 1, interrupt_count = 0;
 
     while (interrupt_count < MAX_ATTEMPTS && done != 0) {
@@ -92,7 +92,7 @@ int connectToReader(void) {
     return 0;
 }
 
-int connectToWriter(void) {
+int connect_to_writer(void) {
     read_set();
-    send_SU(UA);
+    send_supervision_message(UA);
 }

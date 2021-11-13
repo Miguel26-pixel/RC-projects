@@ -109,14 +109,14 @@ int main(int argc, char **argv) {
     unsigned char buf[255];
     int i, sum = 0, speed = 0, interrupt_count = 0;
 
-    openSerialPort(argc, argv, &oldtio);
+    open_serial_port(argc, argv, &oldtio);
 
     int done = 1;
 
-    setupAlarm();
+    setup_alarm();
 
-    if (connectToReader() != 0) {
-        closeSerialPort(&oldtio);
+    if (connect_to_reader() != 0) {
+        close_serial_port(&oldtio);
         return 1;
     }
 
@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
     read_rr(1);
     puts("RR1 DONE");
 
-    closeSerialPort(&oldtio);
+    close_serial_port(&oldtio);
 
     return 0;
 }

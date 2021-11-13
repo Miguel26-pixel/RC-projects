@@ -1,3 +1,3 @@
-int setupAlarm(void);
+int setup_alarm(void);
 
-void sigalrm_hadler(int _);
+void sigalrm_handler(int _);

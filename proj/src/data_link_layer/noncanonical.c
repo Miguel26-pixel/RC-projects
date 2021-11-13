@@ -78,21 +78,21 @@ int main(int argc, char **argv) {
     struct termios oldtio, newtio;
     unsigned char buf[255];
 
-    openSerialPort(argc, argv, &oldtio);
+    open_serial_port(argc, argv, &oldtio);
 
-    connectToWriter();
+    connect_to_writer();
 
     int r = readI(fd);
 
     if (r == 0) {
         printf("ANSWER = RR1\n");
-        send_SU(RR1);
+        send_supervision_message(RR1);
     } else {
         printf("ANSWER = RR0\n");
-        send_SU(RR0);
+        send_supervision_message(RR0);
     }
 
-    closeSerialPort(&oldtio);
+    close_serial_port(&oldtio);
 
     return 0;
 }

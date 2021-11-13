@@ -34,7 +34,7 @@ int send_set(void) {
     printf("%d bytes written\n", res);
 }
 
-int send_SU(unsigned char c) {
+int send_supervision_message(unsigned char c) {
     int res;
     unsigned char m;
     m = F;

@@ -68,7 +68,7 @@ int read_ua() {
     return 0;
 }
 
-void sigalrm_hadler(int _) {
+void sigalrm_handler(int _) {
     printf("handler reached\n");
     interrupt = 1;
 }

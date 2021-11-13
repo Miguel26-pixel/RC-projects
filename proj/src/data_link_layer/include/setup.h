@@ -1,9 +1,9 @@
 #include <termios.h>
 
-int openSerialPort(int argc, char **argv, struct termios *oldtio);
+int open_serial_port(int argc, char **argv, struct termios *oldtio);
 
-int closeSerialPort(struct termios *oldtio);
+int close_serial_port(struct termios *oldtio);
 
-int connectToReader(void);
+int connect_to_reader(void);
 
-int connectToWriter(void);
+int connect_to_writer(void);
