@@ -39,8 +39,7 @@ int open_serial_port(int argc, char **argv, struct termios *oldtio) {
         perror("tcgetattr");
         exit(-1);
     }
-
-    bzero(&newtio, sizeof(newtio));
+    memset(&newtio, 0, sizeof(newtio));
     newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
     newtio.c_iflag = IGNPAR;
     newtio.c_oflag = 0;
