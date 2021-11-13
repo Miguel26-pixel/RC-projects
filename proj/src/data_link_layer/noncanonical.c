@@ -22,8 +22,6 @@
 #define REJ0 0x01
 #define REJ1 0x81
 
-volatile int STOP = false;
-
 int fd;
 
 int main(int argc, char **argv) {
