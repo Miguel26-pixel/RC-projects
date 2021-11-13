@@ -1,16 +1,11 @@
 #include "include/setup.h"
+#include "include/write.h"
 
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
-
-#include "include/write.h"
 
 #define F 0x7E
 #define AER 0x03
