@@ -1,4 +1,5 @@
 #include "include/alarm.h"
+#define _GNU_SOURCE
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -13,7 +14,7 @@
 
 extern int interrupt;
 
-int setupAlarm(void) {
+int setup_alarm(void) {
     struct sigaction action;
     action.sa_handler = sigalrm_hadler;
     sigemptyset(&action.sa_mask);
