@@ -1,10 +1,10 @@
 all: reader writer
 
-reader: write.c read.c alarm.c setup.c noncanonical.c
-	gcc noncanonical.c write.c read.c alarm.c setup.c -o receiver
+reader: src/data_link_layer/write.c src/data_link_layer/read.c src/data_link_layer/alarm.c src/data_link_layer/setup.c src/data_link_layer/noncanonical.c
+	gcc src/data_link_layer/noncanonical.c src/data_link_layer/write.c src/data_link_layer/read.c src/data_link_layer/alarm.c src/data_link_layer/setup.c -o receiver
 
-writer: write.c read.c alarm.c setup.c writenoncanonical.c
-	gcc writenoncanonical.c write.c read.c alarm.c setup.c -o emitter
+writer: src/data_link_layer/write.c src/data_link_layer/read.c src/data_link_layer/alarm.c src/data_link_layer/setup.c src/data_link_layer/writenoncanonical.c
+	gcc src/data_link_layer/writenoncanonical.c src/data_link_layer/write.c src/data_link_layer/read.c src/data_link_layer/alarm.c src/data_link_layer/setup.c -o emitter
 
 clean:
 	rm -rf receiver emitter

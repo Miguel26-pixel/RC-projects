@@ -1,4 +1,4 @@
-#include "setup.h"
+#include "include/setup.h"
 
 int openSerialPort (int argc, char** argv, struct termios * oldtio) {
     if (argc < 2 || argc > 2) {

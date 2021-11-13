@@ -11,8 +11,8 @@
 #include <signal.h>
 #include <errno.h>
 
-#include "setup.h"
-#include "alarm.h"
+#include "include/alarm.h"
+#include "include/setup.h"
 
 #define _GNU_SOURCE
 

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "setup.h"
+#include "include/setup.h"
 
 #define F 0x7E
 #define AER 0x03
