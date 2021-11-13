@@ -10,6 +10,7 @@
 #include "include/setup.h"
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define F   0x7E
 #define AER 0x03
@@ -96,12 +97,17 @@ int read_rr(int n) {
 
 
 int main(int argc, char **argv) {
+    if (argc < 2 || argc > 2) {
+        printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
+        exit(1);
+    }
+
     int res;
     struct termios oldtio;
     unsigned char buf[255];
     int i, sum = 0, speed = 0, interrupt_count = 0;
 
-    open_serial_port(argc, argv, &oldtio);
+    open_serial_port(argv[1], &oldtio);
 
     int done = 1;
 

@@ -19,17 +19,12 @@
 extern int fd;
 
 
-int open_serial_port(int argc, char **argv, struct termios *oldtio) {
-    if (argc < 2 || argc > 2) {
-        printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
-        exit(1);
-    }
-
+int open_serial_port(const char *path, struct termios *oldtio) {
     struct termios newtio;
 
-    fd = open(argv[1], O_RDWR | O_NOCTTY);
+    fd = open(path, O_RDWR | O_NOCTTY);
     if (fd < 0) {
-        perror(argv[1]);
+        perror(path);
         exit(-1);
     }
 

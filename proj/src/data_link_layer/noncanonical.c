@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     struct termios oldtio;
     unsigned char buf[255];
 
-    open_serial_port(argc, argv, &oldtio);
+    open_serial_port(argv[1], &oldtio);
 
     connect_to_writer();
 
