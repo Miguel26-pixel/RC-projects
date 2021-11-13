@@ -31,7 +31,7 @@
 #define REJ0 0x01
 #define REJ1 0x81
 
-volatile int STOP=FALSE;
+volatile int STOP = FALSE;
 int fd;
 int interrupt;
 
@@ -42,16 +42,16 @@ int send_i(const unsigned char *d, size_t nb, unsigned n) {
     unsigned char m;
 
     m = F;
-    res = write(fd, &m, 1);   
+    res = write(fd, &m, 1);
 
     m = AER;
     res = write(fd, &m, 1);
-     
+
     m = n == 0 ? CI0 : CI1;
-    res = write(fd, &m, 1); 
+    res = write(fd, &m, 1);
 
     m = (unsigned char) (AER ^ (n == 0 ? CI0 : CI1));
-    res = write(fd, &m, 1); 
+    res = write(fd, &m, 1);
 
     m = 0;
     for (int i = 0; i < nb; ++i) {
@@ -73,56 +73,59 @@ int read_rr(int n) {
     int res;
     unsigned char a, c, m;
     res = read(fd, &m, 1);
-    if (res <= 0) { interrupt = 1; return 1; }
+    if (res <= 0) {
+        interrupt = 1;
+        return 1;
+    }
     if (m != F) puts("ERROR FLAG");
-    
+
     alarm(0);
 
-    res = read(fd, &a, 1); 
-    if (a != ARE) puts("ERROR A"); 
-      
-    res = read(fd, &c, 1); ;
-    if (c != (n == 0 ? RR0 : RR1)) puts("ERROR C"); 
-      
+    res = read(fd, &a, 1);
+    if (a != ARE) puts("ERROR A");
+
+    res = read(fd, &c, 1);;
+    if (c != (n == 0 ? RR0 : RR1)) puts("ERROR C");
+
     res = read(fd, &m, 1);
-    
-    if (m != (a ^ c)) printf("ERROR BCC: a - %x, c - %x, xor - %x, m - %x, bool - %d\n",a,c,(char) a^c,m, (char) (a^c) == (char) m);
-    
+
+    if (m != (a ^ c))
+        printf("ERROR BCC: a - %x, c - %x, xor - %x, m - %x, bool - %d\n", a, c, (char) a ^ c, m,
+               (char) (a ^ c) == (char) m);
+
     res = read(fd, &m, 1);
-    if (m != F) puts("ERROR FLAG"); 
-    
+    if (m != F) puts("ERROR FLAG");
+
     return 0;
 }
 
 
-
-int main(int argc, char** argv)
-{
+int main(int argc, char **argv) {
     int res;
     struct termios oldtio;
     unsigned char buf[255];
     int i, sum = 0, speed = 0, interrupt_count = 0;
-    
-    openSerialPort(argc,argv, &oldtio);
+
+    openSerialPort(argc, argv, &oldtio);
 
     int done = 1;
 
-	setupAlarm();
+    setupAlarm();
 
-	if (connectToReader() != 0) {
-		closeSerialPort(&oldtio);
-		return 1;
-	}
-    
+    if (connectToReader() != 0) {
+        closeSerialPort(&oldtio);
+        return 1;
+    }
+
     puts("SET DONE");
-    
+
     unsigned char s[] = "HelloWorld";
     send_i(s, sizeof(s), 0);
     puts("I DONE");
     read_rr(1);
     puts("RR1 DONE");
-    
-	closeSerialPort(&oldtio);
-    
-	return 0;
+
+    closeSerialPort(&oldtio);
+
+    return 0;
 }

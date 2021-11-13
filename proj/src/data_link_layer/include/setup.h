@@ -20,9 +20,9 @@
 
 extern int fd;
 
-int openSerialPort(int argc, char** argv, struct termios * oldtio);
+int openSerialPort(int argc, char **argv, struct termios *oldtio);
 
-int closeSerialPort (struct termios * oldtio);
+int closeSerialPort(struct termios *oldtio);
 
 int connectToReader();
 
