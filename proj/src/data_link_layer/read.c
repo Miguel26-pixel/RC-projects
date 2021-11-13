@@ -3,50 +3,33 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdbool.h>
 
-int read_ua(void) {
-    ssize_t res;
-    unsigned char a, c, m;
-    res = read(fd, &m, 1);
-    if (res <= 0) return 1;
-    if (m != F) puts("ERROR FLAG");
+int read_supervision_message(unsigned char address, unsigned char control) {
 
-    alarm(0);
+    typedef enum {
+        READ_START_FLAG, READ_ADDRESS, READ_CONTROL, READ_BCC, READ_END_FLAG
+    } state_t;
 
-    res = read(fd, &a, 1);
-    if (a != ARE) puts("ERROR A");
-
-    res = read(fd, &c, 1);;
-    if (c != UA) puts("ERROR C");
-
-    res = read(fd, &m, 1);
-    if (m != (unsigned char) (a ^ c)) puts("ERROR BCC");
-
-    res = read(fd, &m, 1);
-    if (m != F) puts("ERROR FLAG");
-
-    return 0;
-}
-
-int read_set(void) {
-    ssize_t res;
-    unsigned char m, a, c;
-    res = read(fd, &m, 1);
-
-    if (m != F) puts("ERROR FLAG");
-    res = read(fd, &a, 1);
-
-    if (a != AER) puts("ERROR A");
-    res = read(fd, &c, 1);
-
-    if (c != SET) puts("ERROR C");
-    res = read(fd, &m, 1);
-
-    if (m != (unsigned char) (a ^ c)) puts("ERROR BCC");
-    res = read(fd, &m, 1);
-
-    if (m != F) puts("ERROR FLAG");
-
-    printf("everything okeie\n");
+    state_t s = READ_START_FLAG;
+    unsigned char b;
+    while (true) {
+        // COMBACK: Failures?
+        if (read(fd, &b, 1) < 0) return -1;
+        else alarm(0);
+        if (s == READ_START_FLAG && b == F) {
+            s = READ_ADDRESS;
+        } else if (s == READ_ADDRESS && b == address) {
+            s = READ_CONTROL;
+        } else if (s == READ_CONTROL && b == control) {
+            s = READ_BCC;
+        } else if (s == READ_BCC && b == (unsigned char) (address ^ control)) {
+            s = READ_END_FLAG;
+        } else if (s == READ_END_FLAG && b == F) {
+            return 0;
+        } else {
+            s == READ_START_FLAG;
+        }
+    }
     return 0;
 }

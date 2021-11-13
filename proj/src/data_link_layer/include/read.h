@@ -17,4 +17,4 @@ extern int fd, interrupt;
 
 int read_set(void);
 
-int read_ua(void);
+int read_supervision_message(unsigned char address, unsigned char control);
