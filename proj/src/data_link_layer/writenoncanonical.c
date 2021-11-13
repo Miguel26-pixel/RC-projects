@@ -31,6 +31,9 @@
 #define REJ0 0x01
 #define REJ1 0x81
 
+#define FALSE 0
+#define TRUE 1
+
 volatile int STOP = FALSE;
 int fd;
 int interrupt;

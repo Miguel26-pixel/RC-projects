@@ -1,3 +1,5 @@
+#include "include/setup.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -7,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "include/setup.h"
+#include "include/write.h"
 
 #define F 0x7E
 #define AER 0x03
@@ -24,6 +26,8 @@
 #define REJ0 0x01
 #define REJ1 0x81
 
+#define FALSE 0
+#define TRUE 1
 
 volatile int STOP = FALSE;
 
