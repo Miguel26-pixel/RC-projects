@@ -33,7 +33,7 @@ int interrupt;
 
 int send_i(const unsigned char *d, size_t nb, unsigned n) {
     interrupt = 0;
-    int res;
+    ssize_t res;
     unsigned char m;
 
     m = F;
@@ -59,13 +59,13 @@ int send_i(const unsigned char *d, size_t nb, unsigned n) {
     m = F;
     res = write(fd, &m, 1);
 
-    printf("%d bytes written\n", res);
+    printf("%zd bytes written\n", res);
     return 0;
 }
 
 
 int read_rr(int n) {
-    int res;
+    ssize_t res;
     unsigned char a, c, m;
     res = read(fd, &m, 1);
     if (res <= 0) {

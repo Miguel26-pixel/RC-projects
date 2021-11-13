@@ -5,7 +5,7 @@
 
 int send_set(void) {
     interrupt = 0;
-    int res;
+    ssize_t res;
     unsigned char m;
 
     m = F;
@@ -23,11 +23,11 @@ int send_set(void) {
     m = F;
     res = write(fd, &m, 1);
 
-    printf("%d bytes written\n", res);
+    printf("%zd bytes written\n", res);
 }
 
 int send_supervision_message(unsigned char c) {
-    int res;
+    ssize_t res;
     unsigned char m;
     m = F;
     res = write(fd, &m, 1);

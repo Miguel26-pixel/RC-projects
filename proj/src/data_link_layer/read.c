@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 int read_ua(void) {
-    int res;
+    ssize_t res;
     unsigned char a, c, m;
     res = read(fd, &m, 1);
     if (res <= 0) return 1;
@@ -29,7 +29,7 @@ int read_ua(void) {
 }
 
 int read_set(void) {
-    int res;
+    ssize_t res;
     unsigned char m, a, c;
     res = read(fd, &m, 1);
 

@@ -28,7 +28,7 @@ int fd;
 int interrupt;
 
 int readI(int fd) {
-    int res;
+    ssize_t res;
     char m, a, c;
     unsigned char buf[255];
     res = read(fd, &m, 1);
