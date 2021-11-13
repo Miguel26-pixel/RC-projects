@@ -28,11 +28,7 @@ int main(int argc, char** argv)
     struct termios oldtio,newtio;
     char buf[255];
 
-    if ( (argc < 2) || 
-  	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS4", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS10", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS11", argv[1])!=0))) {
+    if ( (argc < 2) ) {
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
       exit(1);
     }

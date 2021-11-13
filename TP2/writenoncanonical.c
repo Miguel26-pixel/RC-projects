@@ -29,24 +29,10 @@ int fd;
 int interrupt;
 
 int send_set() {
-    interrupt = 0;
     int res;
-    char m;
+    char m[] = {F, AER, SET, AER ^ SET, F};
 
-    m = F;
-    res = write(fd, &m, 1);   
-
-    m = AER;
-    res = write(fd, &m, 1);
-     
-    m = SET;
-    res = write(fd, &m, 1); 
-
-    m = AER ^ SET;
-    res = write(fd, &m, 1); 
-
-    m = F;
-    res = write(fd, &m, 1);
+    res = write(fd, m, 5);  
 
     printf("%d bytes written\n", res);
 }
@@ -64,11 +50,11 @@ int read_ua() {
     alarm(0);
 
     res = read(fd, &a, 1); 
-    printf("res - %d m - %c\n",res,m);
+    printf("res - %d m - %c\n",res,a);
     if (a != ARE) puts("ERROR A"); 
       
     res = read(fd, &c, 1);
-    printf("res - %d m - %c\n",res,m);
+    printf("res - %d m - %c\n",res,c);
     if (c != UA) puts("ERROR C"); 
       
     res = read(fd, &m, 1); 
@@ -95,11 +81,7 @@ int main(int argc, char** argv)
     char buf[255];
     int i, sum = 0, speed = 0, interrupt_count = 0;
     
-    if ( (argc < 2) || 
-  	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS4", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS10", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS11", argv[1])!=0))) {
+    if ( (argc < 2) ) {
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
       exit(1);
     }
@@ -112,7 +94,7 @@ int main(int argc, char** argv)
 
 
     fd = open(argv[1], O_RDWR | O_NOCTTY );
-    if (fd <0) {perror(argv[1]); exit(-1); }
+    if (fd < 0) {perror(argv[1]); exit(-1); }
 
     if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
       perror("tcgetattr");
@@ -152,6 +134,7 @@ int main(int argc, char** argv)
     int done = 1;
     while(interrupt_count < MAX_ATTEMPTS && done != 0) {
         send_set();
+        interrupt=0;
         printf("HERE1\n");
         signal(SIGALRM, sigalrm_hadler);
         alarm(3);
