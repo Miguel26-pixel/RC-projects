@@ -48,4 +48,5 @@ int read_set(void) {
     if (m != F) puts("ERROR FLAG");
 
     printf("everything okeie\n");
+    return 0;
 }

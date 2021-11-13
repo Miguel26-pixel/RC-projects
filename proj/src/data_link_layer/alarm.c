@@ -12,7 +12,7 @@ int setup_alarm(void) {
     action.sa_handler = sigalrm_handler;
     sigemptyset(&action.sa_mask);
     action.sa_flags = 0;
-    sigaction(SIGALRM, &action, NULL);
+    return sigaction(SIGALRM, &action, NULL);
 }
 
 void sigalrm_handler(int _) {

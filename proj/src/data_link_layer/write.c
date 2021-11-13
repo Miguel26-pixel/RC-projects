@@ -24,6 +24,7 @@ int send_set(void) {
     res = write(fd, &m, 1);
 
     printf("%zd bytes written\n", res);
+    return 0;
 }
 
 int send_supervision_message(unsigned char c) {
@@ -41,4 +42,5 @@ int send_supervision_message(unsigned char c) {
     res = write(fd, &m, 1);
 
     printf("SEND ANSWER DONE\n");
+    return 0;
 }

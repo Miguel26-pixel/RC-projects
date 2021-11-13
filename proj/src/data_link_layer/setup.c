@@ -66,7 +66,7 @@ int close_serial_port(struct termios *oldtio) {
         exit(-1);
     }
 
-    close(fd);
+    return close(fd);
 }
 
 
@@ -91,4 +91,5 @@ int connect_to_reader(void) {
 int connect_to_writer(void) {
     read_set();
     send_supervision_message(UA);
+    return 0;
 }
