@@ -27,7 +27,7 @@ volatile int STOP = false;
 int fd;
 int interrupt;
 
-int readI(int fd) {
+int readI() {
     ssize_t res;
     unsigned char m, a, c;
     unsigned char buf[255];
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 
     connect_to_writer();
 
-    int r = readI(fd);
+    int r = readI();
 
     if (r == 0) {
         printf("ANSWER = RR1\n");

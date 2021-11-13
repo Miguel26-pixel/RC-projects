@@ -30,7 +30,7 @@ volatile int STOP=FALSE;
 int fd;
 int interrupt;
 
-int readI(int fd) {
+int readI() {
     int res;
     char m, a, c;
     unsigned char buf[255];
