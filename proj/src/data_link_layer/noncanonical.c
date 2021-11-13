@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 
     openSerialPort(argc, argv, &oldtio);
 
-    connectToWriter(UA);
+    connectToWriter();
 
     int r = readI(fd);
 
