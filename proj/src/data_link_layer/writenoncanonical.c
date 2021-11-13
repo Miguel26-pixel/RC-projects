@@ -8,6 +8,7 @@
 
 #include "include/alarm.h"
 #include "include/setup.h"
+#include "include/connection.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -30,70 +31,6 @@
 volatile int STOP = false;
 int fd;
 int interrupt;
-
-
-int send_i(const unsigned char *d, size_t nb, unsigned n) {
-    interrupt = 0;
-    ssize_t res;
-    unsigned char m;
-
-    m = F;
-    res = write(fd, &m, 1);
-
-    m = AER;
-    res = write(fd, &m, 1);
-
-    m = n == 0 ? CI0 : CI1;
-    res = write(fd, &m, 1);
-
-    m = (unsigned char) (AER ^ (n == 0 ? CI0 : CI1));
-    res = write(fd, &m, 1);
-
-    m = 0;
-    for (int i = 0; i < nb; ++i) {
-        res = write(fd, d + i, 1);
-        m ^= d[i];
-    }
-
-    res = write(fd, &m, 1);
-
-    m = F;
-    res = write(fd, &m, 1);
-
-    printf("%zd bytes written\n", res);
-    return 0;
-}
-
-
-int read_rr(int n) {
-    ssize_t res;
-    unsigned char a, c, m;
-    res = read(fd, &m, 1);
-    if (res <= 0) {
-        interrupt = 1;
-        return 1;
-    }
-    if (m != F) puts("ERROR FLAG");
-
-    alarm(0);
-
-    res = read(fd, &a, 1);
-    if (a != ARE) puts("ERROR A");
-
-    res = read(fd, &c, 1);;
-    if (c != (n == 0 ? RR0 : RR1)) puts("ERROR C");
-
-    res = read(fd, &m, 1);
-
-    if (m != (a ^ c))
-        printf("ERROR BCC: a - %x, c - %x, xor - %x, m - %x, bool - %d\n", a, c, (unsigned char) a ^ c, m,
-               (unsigned char) (a ^ c) == (unsigned char) m);
-
-    res = read(fd, &m, 1);
-    if (m != F) puts("ERROR FLAG");
-
-    return 0;
-}
 
 
 int main(int argc, char **argv) {
