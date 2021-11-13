@@ -27,7 +27,6 @@
 #define REJ1 0x81
 
 extern int fd;
-extern int interrupt;
 
 int read_supervision_message(unsigned char address, unsigned char control) {
 
@@ -92,7 +91,6 @@ int connect_to_writer(void) {
 }
 
 int send_i(const unsigned char *d, size_t nb, unsigned n) {
-    interrupt = 0;
     ssize_t res;
     unsigned char m;
 
@@ -129,7 +127,6 @@ int read_rr(int n) {
     unsigned char a, c, m;
     res = read(fd, &m, 1);
     if (res <= 0) {
-        interrupt = 1;
         return 1;
     }
     if (m != F) puts("ERROR FLAG");

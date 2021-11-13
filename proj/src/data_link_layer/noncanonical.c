@@ -25,7 +25,6 @@
 volatile int STOP = false;
 
 int fd;
-int interrupt;
 
 int main(int argc, char **argv) {
     int res;

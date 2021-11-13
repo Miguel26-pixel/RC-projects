@@ -4,9 +4,6 @@
 #include <string.h>
 #include <signal.h>
 
-
-extern int interrupt;
-
 int setup_alarm(void) {
     struct sigaction action;
     action.sa_handler = sigalrm_handler;
@@ -15,6 +12,4 @@ int setup_alarm(void) {
     return sigaction(SIGALRM, &action, NULL);
 }
 
-void sigalrm_handler(int _) {
-    interrupt = 1;
-}
+void sigalrm_handler(int _) {}
