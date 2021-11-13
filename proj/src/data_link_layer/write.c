@@ -3,40 +3,16 @@
 #include <stdio.h>
 #include <unistd.h>
 
-int send_set(void) {
-    interrupt = 0;
-    ssize_t res;
-    unsigned char m;
-
-    m = F;
-    res = write(fd, &m, 1);
-
-    m = AER;
-    res = write(fd, &m, 1);
-
-    m = SET;
-    res = write(fd, &m, 1);
-
-    m = AER ^ SET;
-    res = write(fd, &m, 1);
-
-    m = F;
-    res = write(fd, &m, 1);
-
-    printf("%zd bytes written\n", res);
-    return 0;
-}
-
-int send_supervision_message(unsigned char c) {
+int send_supervision_message(unsigned char address, unsigned char control) {
     ssize_t res;
     unsigned char m;
     m = F;
     res = write(fd, &m, 1);
-    m = ARE;
+    m = address;
     res = write(fd, &m, 1);
-    m = c;
+    m = control;
     res = write(fd, &m, 1);
-    m = ARE ^ c;
+    m = address ^ control;
     res = write(fd, &m, 1);
     m = F;
     res = write(fd, &m, 1);

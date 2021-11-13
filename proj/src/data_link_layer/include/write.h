@@ -15,6 +15,4 @@
 
 extern int fd, interrupt;
 
-int send_set(void);
-
-int send_supervision_message(unsigned char c);
+int send_supervision_message(unsigned char address, unsigned char control);

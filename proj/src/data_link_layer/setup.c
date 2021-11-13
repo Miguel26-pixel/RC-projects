@@ -74,7 +74,7 @@ int connect_to_reader(void) {
     int done = 1, interrupt_count = 0;
 
     while (interrupt_count < MAX_ATTEMPTS && done != 0) {
-        send_set();
+        send_supervision_message(AER, SET);
         printf("Attempt - %d\n", interrupt_count);
         alarm(TIMEOUT);
         if ((done = read_supervision_message(ARE, UA)) != 0) interrupt_count++; else break;
@@ -90,6 +90,6 @@ int connect_to_reader(void) {
 
 int connect_to_writer(void) {
     read_supervision_message(AER, SET);
-    send_supervision_message(UA);
+    send_supervision_message(ARE, UA);
     return 0;
 }
