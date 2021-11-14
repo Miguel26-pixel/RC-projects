@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
         memset(res[i], 0, sizeof(res[i]));
         printf(YELLOW"[receiver]: reading message (R = %d)\n"RESET, n);
 
-        if (read_information(res[i], 0) < 0) {
+        if (read_information(res[i], sizeof(res[i]), n) < 0) {
             fprintf(stderr, RED"[receiver]: reading message: error\n"RESET);
         } else {
             printf("[receiver]: read message: %s\n"RESET, res[i]);

@@ -55,32 +55,28 @@ int read_supervision_message(unsigned char address, unsigned char control) {
     }
 }
 
-int send_supervision_message(unsigned char address, unsigned char control) {
-    ssize_t res;
+ssize_t send_supervision_message(unsigned char address, unsigned char control) {
     unsigned char message[] = {F, address, control, address ^ control, F};
-    res = write(fd, message, sizeof(message));
-
-    return 0;
+    return write(fd, message, sizeof(message));
 }
 
 int connect_to_receiver(void) {
-    int done = 1, interrupt_count = 0;
+    int interrupt_count = 0;
 
-    while (interrupt_count < MAX_ATTEMPTS && done != 0) {
+    while (interrupt_count < MAX_ATTEMPTS) {
         send_supervision_message(AER, SET);
         printf("[connecting]: attempt: %d\n", interrupt_count);
         alarm(TIMEOUT);
-        if ((done = read_supervision_message(ARE, UA)) != 0) interrupt_count++; else break;
+        if (read_supervision_message(ARE, UA) < 0) interrupt_count++;
+        else return 0;
     }
 
-    if (interrupt_count == MAX_ATTEMPTS) return 1;
-
-    return 0;
+    return -1;
 }
 
 int connect_to_writer(void) {
-    read_supervision_message(AER, SET);
-    send_supervision_message(ARE, UA);
+    if (read_supervision_message(AER, SET) < 0) return -1;
+    if (send_supervision_message(ARE, UA) < 0) return -1;
     return 0;
 }
 
@@ -113,7 +109,7 @@ int send_i(const unsigned char *d, size_t nb, unsigned n) {
     return 0;
 }
 
-int read_information(unsigned char *dest, size_t n) {
+int read_information(unsigned char *dest, size_t size, bool n) {
     typedef enum {
         READ_FLAG_START, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, READ_BCC2, READ_FLAG_END
     } state_t;
