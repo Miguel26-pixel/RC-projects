@@ -152,39 +152,49 @@ int read_rr(int n) {
 }
 
 int readI() {
-    ssize_t res;
-    unsigned char m, a, c;
-    unsigned char buf[255];
-    res = read(fd, &m, 1);
+    typedef enum {
+        READ_FLAG_START, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, READ_BCC2, READ_FLAG_END
+    } state_t;
 
-    if (m != F) puts("ERROR FLAG");
-    res = read(fd, &a, 1);
+    state_t s = READ_FLAG_START;
 
-    if (a != AER) puts("ERROR A");
-    res = read(fd, &c, 1);
+    unsigned char b, c, bcc2;
+    unsigned char buf[256];
+    unsigned int i = 0;
+    bool done = false;
+    while (true) {
+        //COMBACK: Better to reorganize the loop to avoid reading sometimes.
+        if (!done) {
+            if (read(fd, &b, 1) < 0) return -1;
+            else alarm(0);
+        }
 
-    if (c != CI0) { if (c != CI1) puts("ERROR Casd"); }
-    res = read(fd, &m, 1);
-
-    if (m != (unsigned char) (a ^ c)) puts("ERROR BCC");
-
-    int count = 0;
-    unsigned char bcc2 = 0;
-    do {
-        res = read(fd, &m, 1);
-        buf[count] = m;
-        count++;
-    } while (m != F);
-
-    for (int i = 0; i < count - 2; i++) {
-        bcc2 = bcc2 ^ buf[i];
+        if (s == READ_FLAG_START && b == F) {
+            s = READ_ADDRESS;
+        } else if (s == READ_ADDRESS && b == AER) {
+            s = READ_CONTROL;
+        } else if (s == READ_CONTROL && (b == CI0 || b == CI1)) {
+            c = b;
+            s = READ_BCC1;
+        } else if (s == READ_BCC1 && b == (unsigned char) (AER ^ c)) {
+            s = READ_DATA;
+        } else if (s == READ_DATA) {
+            // COMBACK: Buffer overflow
+            buf[i] = b;
+            ++i;
+            if (b == F) {
+                done = true;
+                s = READ_BCC2;
+                // COMBACK: Most likely a function
+                bcc2 = 0;
+                for (int j = 0; j < i - 2; ++j) bcc2 = (unsigned char) (bcc2 ^ buf[j]);
+            }
+        } else if (s == READ_BCC2 && buf[i - 2] == bcc2) {
+            s = READ_FLAG_END;
+        } else if (s == READ_FLAG_END && buf[i - 1] == F) {
+            return 0;
+        } else {
+            s = READ_FLAG_START;
+        }
     }
-
-    if (bcc2 != buf[count - 2]) puts("ERROR BCC2");
-
-    if (buf[count - 1] != F) puts("ERROR F2");
-
-    printf("READ I DONE\n");
-
-    if (c == CI0) { return 0; } else { return 1; }
 }
