@@ -1,5 +1,5 @@
-#ifndef FEUP_RCOM_CONNECTION_H
-#define FEUP_RCOM_CONNECTION_H
+#ifndef FEUP_RC_CONNECTION_H
+#define FEUP_RC_CONNECTION_H
 
 #include <sys/types.h>
 #include <stdbool.h>
@@ -29,4 +29,4 @@ int connect_to_writer(void);
 int send_information(const unsigned char *d, size_t nb, unsigned n);
 int read_information(unsigned char *dest, size_t size, bool n);
 
-#endif //FEUP_RCOM_CONNECTION_H
+#endif //FEUP_RC_CONNECTION_H
