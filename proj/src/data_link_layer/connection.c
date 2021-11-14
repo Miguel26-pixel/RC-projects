@@ -74,17 +74,16 @@ int connect_to_writer(void) {
     return 0;
 }
 
-int send_information(const unsigned char *d, size_t nb, unsigned n) {
-    ssize_t res;
+int send_information(const unsigned char *data, size_t nb, bool n) {
     unsigned char c = (unsigned char) (n << 6);
     unsigned char header[] = {FLAG, ADDRESS_EMITTER_RECEIVER, c, (unsigned char) ADDRESS_EMITTER_RECEIVER ^ c};
 
     if (write(fd, header, sizeof(header)) < 0) return -1;
 
-    if (write(fd, d, nb) < 0) return -1;
+    if (write(fd, data, nb) < 0) return -1;
 
     unsigned char bcc2 = 0;
-    for (int i = 0; i < nb; ++i) bcc2 = (unsigned char) (bcc2 ^ d[i]);
+    for (int i = 0; i < nb; ++i) bcc2 = (unsigned char) (bcc2 ^ data[i]);
 
     unsigned char footer[] = {bcc2, FLAG};
     if (write(fd, footer, sizeof(footer)) < 0) return -1;
@@ -92,7 +91,7 @@ int send_information(const unsigned char *d, size_t nb, unsigned n) {
     return 0;
 }
 
-int read_information(unsigned char *dest, size_t size, bool n) {
+int read_information(unsigned char *data, size_t size, bool n) {
     typedef enum {
         READ_FLAG_START, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, READ_BCC2, READ_FLAG_END
     } state_t;
@@ -122,20 +121,20 @@ int read_information(unsigned char *dest, size_t size, bool n) {
             s = READ_DATA;
         } else if (s == READ_DATA) {
             // COMBACK: Buffer overflow
-            dest[i] = b;
+            data[i] = b;
             ++i;
             if (b == FLAG) {
                 done = true;
                 s = READ_BCC2;
                 // COMBACK: Most likely a function
                 bcc2 = 0;
-                for (int j = 0; j < i - 2; ++j) bcc2 = (unsigned char) (bcc2 ^ dest[j]);
+                for (int j = 0; j < i - 2; ++j) bcc2 = (unsigned char) (bcc2 ^ data[j]);
             }
             //COMBACK: Implement forgiving validation: if header is valid, send reject.
-        } else if (s == READ_BCC2 && dest[i - 2] == bcc2) {
+        } else if (s == READ_BCC2 && data[i - 2] == bcc2) {
             s = READ_FLAG_END;
-        } else if (s == READ_FLAG_END && dest[i - 1] == FLAG) {
-            memcpy(buf, dest, i - 2);
+        } else if (s == READ_FLAG_END && data[i - 1] == FLAG) {
+            memcpy(buf, data, i - 2);
             return 0;
         } else {
             s = READ_FLAG_START;

@@ -10,7 +10,7 @@
 
 extern int fd;
 
-int open_serial_port(const char *path, struct termios *oldtio) {
+int open_serial_port(const char *path, struct termios *old_configuration) {
     struct termios newtio;
 
     fd = open(path, O_RDWR | O_NOCTTY);
@@ -19,7 +19,7 @@ int open_serial_port(const char *path, struct termios *oldtio) {
         exit(-1);
     }
 
-    if (tcgetattr(fd, oldtio) == -1) {
+    if (tcgetattr(fd, old_configuration) == -1) {
         perror("tcgetattr");
         exit(-1);
     }
@@ -43,9 +43,9 @@ int open_serial_port(const char *path, struct termios *oldtio) {
     return 0;
 }
 
-int close_serial_port(struct termios *oldtio) {
+int close_serial_port(const struct termios *old_configuration) {
     sleep(1);
-    if (tcsetattr(fd, TCSANOW, oldtio) == -1) {
+    if (tcsetattr(fd, TCSANOW, old_configuration) == -1) {
         perror("tcsetattr");
         exit(-1);
     }
