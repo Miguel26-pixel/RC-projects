@@ -12,9 +12,9 @@
 
 #define SET 0x03
 #define UA  0x07
-#define CI(n) (n << 6)
-#define RR(n) (0x05 | (n << 7))
-#define REJ(n) (0x01 | (n << 7))
+#define CI(n) ((n) << 6)
+#define RR(n) (0x05 | ((n) << 7))
+#define REJ(n) (0x01 | ((n) << 7))
 
 #define RED "\x1b[1;31m"
 #define YELLOW "\x1b[1;33m"
