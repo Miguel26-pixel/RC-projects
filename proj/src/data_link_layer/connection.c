@@ -74,7 +74,7 @@ int connect_to_writer(void) {
     return 0;
 }
 
-int send_i(const unsigned char *d, size_t nb, unsigned n) {
+int send_information(const unsigned char *d, size_t nb, unsigned n) {
     ssize_t res;
     unsigned char c = (unsigned char) (n << 6);
     unsigned char header[] = {FLAG, ADDRESS_EMITTER_RECEIVER, c, (unsigned char) ADDRESS_EMITTER_RECEIVER ^ c};

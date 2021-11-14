@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     while (true && i < 10) {
         printf(YELLOW"[emitter]: sending message (R = %d): message: %s\n"RESET, n, message[i]);
 
-        if (send_i(message[i], strlen(message[i]) + 1, n) < 0) {
+        if (send_information(message[i], strlen(message[i]) + 1, n) < 0) {
             fprintf(stderr, RED"[emitter]: sending message: error\n"RESET);
         } else {
             printf("[emitter]: sending message: success\n"RESET);
