@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 
 
 #define MAX_ATTEMPTS 3
@@ -151,7 +152,7 @@ int read_rr(int n) {
     return 0;
 }
 
-int readI() {
+int read_information(unsigned char *dest, size_t n) {
     typedef enum {
         READ_FLAG_START, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, READ_BCC2, READ_FLAG_END
     } state_t;
@@ -173,6 +174,7 @@ int readI() {
             s = READ_ADDRESS;
         } else if (s == READ_ADDRESS && b == AER) {
             s = READ_CONTROL;
+            //COMBACK: Use n parameter to validate this field
         } else if (s == READ_CONTROL && (b == CI0 || b == CI1)) {
             c = b;
             s = READ_BCC1;
@@ -180,18 +182,20 @@ int readI() {
             s = READ_DATA;
         } else if (s == READ_DATA) {
             // COMBACK: Buffer overflow
-            buf[i] = b;
+            dest[i] = b;
             ++i;
             if (b == F) {
                 done = true;
                 s = READ_BCC2;
                 // COMBACK: Most likely a function
                 bcc2 = 0;
-                for (int j = 0; j < i - 2; ++j) bcc2 = (unsigned char) (bcc2 ^ buf[j]);
+                for (int j = 0; j < i - 2; ++j) bcc2 = (unsigned char) (bcc2 ^ dest[j]);
             }
-        } else if (s == READ_BCC2 && buf[i - 2] == bcc2) {
+            //COMBACK: Implement forgiving validation: if header is valid, send reject.
+        } else if (s == READ_BCC2 && dest[i - 2] == bcc2) {
             s = READ_FLAG_END;
-        } else if (s == READ_FLAG_END && buf[i - 1] == F) {
+        } else if (s == READ_FLAG_END && dest[i - 1] == F) {
+            memcpy(buf, dest, i - 2);
             return 0;
         } else {
             s = READ_FLAG_START;
