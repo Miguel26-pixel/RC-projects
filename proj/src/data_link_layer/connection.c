@@ -68,6 +68,19 @@ int connect_to_writer(void) {
     return 0;
 }
 
+int disconnect_from_receiver(void) {
+    send_supervision_message(ADDRESS_EMITTER_RECEIVER, DISC);
+    unsigned char a, c;
+    if (read_supervision_message(&a, &c) < 0 || a != ADDRESS_RECEIVER_EMITTER || c != DISC) return -1;
+    if (send_supervision_message(ADDRESS_EMITTER_RECEIVER, UA) < 0) return -1;
+    return 0;
+}
+
+int disconnect_from_writer(void) {
+    if (send_supervision_message(ADDRESS_RECEIVER_EMITTER, DISC) < 0) return -1;
+    return 0;
+}
+
 ssize_t send_information(const unsigned char *data, size_t nb, bool n) {
     unsigned char c = (unsigned char) (n << 6);
     unsigned char header[] = {FLAG, ADDRESS_EMITTER_RECEIVER, c, (unsigned char) ADDRESS_EMITTER_RECEIVER ^ c};
@@ -115,11 +128,12 @@ ssize_t read_information(unsigned char *data, size_t size, bool n) {
             s = READ_ADDRESS;
         } else if (s == READ_ADDRESS && b == ADDRESS_EMITTER_RECEIVER) {
             s = READ_CONTROL;
-        } else if (s == READ_CONTROL && (b == CI(n))) {
+        } else if (s == READ_CONTROL && (b == CI(n) || b == DISC)) {
             c = b;
             s = READ_BCC1;
         } else if (s == READ_BCC1 && b == (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ c)) {
-            s = READ_DATA;
+            if (c == CI(n)) s = READ_DATA;
+            else if (c == DISC) return 1;
         } else if (s == READ_DATA) {
             if (i > size) return -2;
             data[i] = b;
@@ -131,7 +145,7 @@ ssize_t read_information(unsigned char *data, size_t size, bool n) {
             }
         } else if (s == READ_BCC2) {
             if (data[i - 2] == bcc2) break;
-            else return -2;
+            else return -3;
         } else {
             s = READ_FLAG_START;
             done = false;
