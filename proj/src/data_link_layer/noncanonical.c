@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <string.h>
 
 #define F 0x7E
 #define AER 0x03
@@ -33,15 +34,15 @@ int main(int argc, char **argv) {
     open_serial_port(argv[1], &oldtio);
 
     connect_to_writer();
-
-    int r = readI();
-
-    if (r == 0) {
-        printf("ANSWER = RR1\n");
-        send_supervision_message(ARE, RR1);
-    } else {
-        printf("ANSWER = RR0\n");
-        send_supervision_message(ARE, RR0);
+    bool n = false;
+    int nt = 9;
+    while (true && nt) {
+        memset(buf, 0, sizeof(buf));
+        read_information(buf, 0);
+        printf("READ: %s\n", (char *) buf);
+        send_supervision_message(ARE, n == 0 ? RR1 : RR0);
+        n = !n;
+        --nt;
     }
 
     close_serial_port(&oldtio);

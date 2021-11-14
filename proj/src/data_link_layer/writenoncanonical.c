@@ -54,12 +54,16 @@ int main(int argc, char **argv) {
 
     puts("SET DONE");
 
-    unsigned char s[] = "HelloWorld";
-    send_i(s, sizeof(s), 0);
-    puts("I DONE");
-    read_rr(1);
-    puts("RR1 DONE");
-
+    const char *strs[] = {"Esta", "mensagem", "tem", "várias", "partes", "espero", "que", "cheguem", "todas."};
+    bool n = false;
+    int nt = 0;
+    while (true && nt < 9) {
+        printf("Sending: %s\n", strs[nt]);
+        send_i((unsigned char *) strs[nt], strlen(strs[nt]) + 1, n);
+        read_supervision_message(ARE, (n == 0) ? RR1 : RR0);
+        n = !n;
+        ++nt;
+    }
     close_serial_port(&oldtio);
 
     return 0;
