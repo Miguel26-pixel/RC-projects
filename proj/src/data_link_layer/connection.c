@@ -60,24 +60,20 @@ int send_supervision_message(unsigned char address, unsigned char control) {
     unsigned char message[] = {F, address, control, address ^ control, F};
     res = write(fd, message, sizeof(message));
 
-    printf("SEND ANSWER DONE\n");
     return 0;
 }
 
-int connect_to_reader(void) {
+int connect_to_receiver(void) {
     int done = 1, interrupt_count = 0;
 
     while (interrupt_count < MAX_ATTEMPTS && done != 0) {
         send_supervision_message(AER, SET);
-        printf("Attempt - %d\n", interrupt_count);
+        printf("[connecting]: attempt: %d\n", interrupt_count);
         alarm(TIMEOUT);
         if ((done = read_supervision_message(ARE, UA)) != 0) interrupt_count++; else break;
     }
 
-    if (interrupt_count == MAX_ATTEMPTS) {
-        puts("INTERRUPTED - REACHED MAX TRIES");
-        return 1;
-    }
+    if (interrupt_count == MAX_ATTEMPTS) return 1;
 
     return 0;
 }
@@ -114,8 +110,6 @@ int send_i(const unsigned char *d, size_t nb, unsigned n) {
 
     m = F;
     res = write(fd, &m, 1);
-
-    printf("%zd bytes written\n", res);
     return 0;
 }
 

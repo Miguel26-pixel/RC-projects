@@ -10,6 +10,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #define F   0x7E
 #define AER 0x03
@@ -28,33 +29,70 @@
 
 int fd;
 
+#define RED "\x1b[1;31m"
+#define YELLOW "\x1b[1;33m"
+#define RESET "\x1b[1;0m"
+
 int main(int argc, char **argv) {
     if (argc < 2 || argc > 2) {
-        printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
+        fprintf(stderr, RED"Usage:\temitter SerialPort\n\tex: emitter /dev/ttyS1\n"RESET);
         exit(1);
     }
 
-    struct termios oldtio;
-    open_serial_port(argv[1], &oldtio);
+    printf(YELLOW"[emitter]: started: using serial port: %s\n"RESET, argv[1]);
+
+    struct termios old_configuration;
+    if (open_serial_port(argv[1], &old_configuration) < 0) {
+        fprintf(stderr, RED"[emitter]: opening serial port: error: %s\n"RESET, strerror(errno));
+        exit(-1);
+    } else {
+        printf("[emitter]: opening serial port: success\n"RESET);
+    }
 
     setup_alarm();
+    printf("[emitter]: configuring alarm: success\n"RESET);
 
-    if (connect_to_reader() != 0) {
-        close_serial_port(&oldtio);
-        return 1;
+    printf(YELLOW"[emitter]: connecting to receiver\n"RESET);
+    if (connect_to_receiver() < 0) {
+        fprintf(stderr, RED"[emitter]: connecting to receiver: error\n"RESET);
+        if (close_serial_port(&old_configuration) < 0) {
+            fprintf(stderr, RED"[emitter]: closing serial port: error: %s\n"RESET, strerror(errno));
+        } else {
+            printf("[emitter]: closing serial port: success\n"RESET);
+        }
+        exit(-1);
+    } else {
+        printf("[emitter]: connecting to receiver: success\n"RESET);
     }
 
-    const char *strs[] = {"Esta", "mensagem", "tem", "várias", "partes", "espero", "que", "cheguem", "todas."};
+    const char *message[] = {"Esta", "mensagem", "tem", "várias", "partes", "espero", "que", "cheguem", "todas.", "\n"};
+
     bool n = false;
-    int nt = 0;
-    while (true && nt < 9) {
-        printf("Sending: %s\n", strs[nt]);
-        send_i((unsigned char *) strs[nt], strlen(strs[nt]) + 1, n);
-        read_supervision_message(ARE, (n == 0) ? RR1 : RR0);
-        n = !n;
-        ++nt;
+    int i = 0;
+    while (true && i < 10) {
+        printf(YELLOW"[emitter]: sending message (R = %d): message: %s\n"RESET, n, message[i]);
+
+        if (send_i(message[i], strlen(message[i]) + 1, n) < 0) {
+            fprintf(stderr, RED"[emitter]: sending message: error\n"RESET);
+        } else {
+            printf("[emitter]: sending message: success\n"RESET);
+        }
+
+        if (read_supervision_message(ARE, (n == 0) ? RR1 : RR0) < 0) {
+            fprintf(stderr, RED"[emitter]: reading confirmation: error\n"RESET);
+        } else {
+            printf("[emitter]: reading confirmation: success\n"RESET);
+            n = !n;
+            ++i;
+        }
     }
-    close_serial_port(&oldtio);
+
+    if (close_serial_port(&old_configuration) < 0) {
+        fprintf(stderr, RED"[emitter]: closing serial port: error: %s"RESET, strerror(errno));
+    } else {
+        printf("[emitter]: closing serial port: success\n"RESET);
+        exit(-1);
+    }
 
     return 0;
 }

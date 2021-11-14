@@ -40,8 +40,6 @@ int open_serial_port(const char *path, struct termios *oldtio) {
         exit(-1);
     }
 
-    printf("New termios structure set\n");
-
     return 0;
 }
 
