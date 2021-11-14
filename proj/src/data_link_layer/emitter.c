@@ -56,15 +56,20 @@ int main(int argc, char **argv) {
             printf("[emitter]: sending message: success\n"RESET);
         }
 
-        if (read_supervision_message(ADDRESS_RECEIVER_EMITTER, RR(!n)) < 0) {
+        unsigned char a, c;
+        if (read_supervision_message(&a, &c) < 0 || a != ADDRESS_RECEIVER_EMITTER) {
             fprintf(stderr, RED"[emitter]: reading confirmation: error\n"RESET);
         } else {
-            printf("[emitter]: reading confirmation: success\n"RESET);
-            n = !n;
-            ++i;
+            if (c == RR(!n)) {
+                printf("[emitter]: reading confirmation: success\n"RESET);
+                n = !n;
+                ++i;
+            } else if (c == REJ(n)) {
+                fprintf(stderr, RED"[emitter]: reading confirmation: error: message rejected\n"RESET);
+                continue;
+            }
         }
     }
-
     if (close_serial_port(&old_configuration) < 0) {
         fprintf(stderr, RED"[emitter]: closing serial port: error: %s"RESET, strerror(errno));
     } else {

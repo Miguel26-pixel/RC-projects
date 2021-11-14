@@ -46,11 +46,18 @@ int main(int argc, char **argv) {
     bool n = false;
     int i = 0;
     while (true && i < 10) {
+        bool force_error = (rand() % 2 == 0);
         memset(res[i], 0, sizeof(res[i]));
         printf(YELLOW"[receiver]: reading message (R = %d)\n"RESET, n);
 
-        if (read_information(res[i], sizeof(res[i]), n) < 0) {
+        if (read_information(res[i], sizeof(res[i]), n) < 0 || force_error) {
             fprintf(stderr, RED"[receiver]: reading message: error\n"RESET);
+            if (send_supervision_message(ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0) {
+                fprintf(stderr, RED"[receiver]: sending confirmation: error\n"RESET);
+            } else {
+                printf("[receiver]: sending reject: success\n"RESET);
+                continue;
+            }
         } else {
             printf("[receiver]: read message: %s\n"RESET, res[i]);
         }
