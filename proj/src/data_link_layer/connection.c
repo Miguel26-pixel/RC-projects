@@ -39,9 +39,6 @@ ssize_t read_supervision_message(unsigned char *address, unsigned char *control)
             s = READ_START_FLAG;
         }
     }
-    size_t ds = (i - 2) <= size ? i - 2 : size;
-    memcpy(buf, data, i - 2);
-    return (ssize_t) ds;
 }
 
 ssize_t send_supervision_message(unsigned char address, unsigned char control) {
