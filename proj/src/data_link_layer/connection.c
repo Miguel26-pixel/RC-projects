@@ -50,7 +50,7 @@ int read_supervision_message(unsigned char address, unsigned char control) {
         } else if (s == READ_END_FLAG && b == F) {
             return 0;
         } else {
-            s == READ_START_FLAG;
+            s = READ_START_FLAG;
         }
     }
 }
