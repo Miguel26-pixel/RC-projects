@@ -8,24 +8,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#define FLAG 0x7E
-#define ADDRESS_EMITTER_RECEIVER 0x03
-#define ADDRESS_RECEIVER_EMITTER 0x01
-#define SET 0x03
-#define UA 0x07
-
-#define SET 0x03
-#define UA  0x07
-#define CI(n) (n << 6)
-#define RR(n) (0x05 | (n << 7))
-#define REJ(n) (0x01 | (n << 7))
-
-
 int fd;
-
-#define RED "\x1b[1;31m"
-#define YELLOW "\x1b[1;33m"
-#define RESET "\x1b[1;0m"
 
 int main(int argc, char **argv) {
     if (argc < 2 || argc > 2) {
