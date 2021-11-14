@@ -1,17 +1,31 @@
 #include "include/connection.h"
+#include "include/setup.h"
+#include "include/alarm.h"
 
 #include <sys/types.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
+#include <errno.h>
 
 #define MAX_ATTEMPTS 3
 #define TIMEOUT 3
 
-extern int fd;
+#define FLAG 0x7E
+#define ADDRESS_EMITTER_RECEIVER 0x03
+#define ADDRESS_RECEIVER_EMITTER 0x01
 
-ssize_t read_supervision_message(unsigned char *address, unsigned char *control) {
+#define SET 0x03
+#define UA  0x07
+#define DISC 0x0B
+#define CI(n) ((n) << 6)
+#define RR(n) (0x05 | ((n) << 7))
+#define REJ(n) (0x01 | ((n) << 7))
+
+static bool n = false;
+
+ssize_t read_supervision_message(int fd, unsigned char *address, unsigned char *control) {
 
     typedef enum {
         READ_START_FLAG, READ_ADDRESS, READ_CONTROL, READ_BCC, READ_END_FLAG
@@ -133,7 +147,7 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool n) {
             s = READ_BCC1;
         } else if (s == READ_BCC1 && b == (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ c)) {
             if (c == CI(n)) s = READ_DATA;
-            else if (c == DISC) return 1;
+            else if (c == DISC) return -5;
         } else if (s == READ_DATA) {
             if (i > size) return -2;
             data[i] = b;

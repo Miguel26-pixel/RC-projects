@@ -4,17 +4,6 @@
 #include <sys/types.h>
 #include <stdbool.h>
 
-#define FLAG 0x7E
-#define ADDRESS_EMITTER_RECEIVER 0x03
-#define ADDRESS_RECEIVER_EMITTER 0x01
-
-#define SET 0x03
-#define UA  0x07
-#define DISC 0x0B
-#define CI(n) ((n) << 6)
-#define RR(n) (0x05 | ((n) << 7))
-#define REJ(n) (0x01 | ((n) << 7))
-
 #define RED "\x1b[1;31m"
 #define YELLOW "\x1b[1;33m"
 #define RESET "\x1b[1;0m"
