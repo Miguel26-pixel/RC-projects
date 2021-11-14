@@ -1,5 +1,5 @@
-#include "include/alarm.h"
 #define _GNU_SOURCE
+#include "include/alarm.h"
 
 #include <string.h>
 #include <signal.h>

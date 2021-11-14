@@ -1,13 +1,10 @@
-/*Non-Canonical Input Processing*/
-
-#include <termios.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "include/alarm.h"
 #include "include/setup.h"
 #include "include/connection.h"
 
+#include <termios.h>
+#include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <errno.h>

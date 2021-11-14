@@ -6,7 +6,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-
 #define MAX_ATTEMPTS 3
 #define TIMEOUT 3
 
