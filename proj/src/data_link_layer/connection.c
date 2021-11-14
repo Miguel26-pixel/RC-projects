@@ -82,30 +82,19 @@ int connect_to_writer(void) {
 
 int send_i(const unsigned char *d, size_t nb, unsigned n) {
     ssize_t res;
-    unsigned char m;
+    unsigned char c = (unsigned char) (n << 6);
+    unsigned char header[] = {FLAG, ADDRESS_EMITTER_RECEIVER, c, (unsigned char) ADDRESS_EMITTER_RECEIVER ^ c};
 
-    m = F;
-    res = write(fd, &m, 1);
+    if (write(fd, header, sizeof(header)) < 0) return -1;
 
-    m = AER;
-    res = write(fd, &m, 1);
+    if (write(fd, d, nb) < 0) return -1;
 
-    m = n == 0 ? CI0 : CI1;
-    res = write(fd, &m, 1);
+    unsigned char bcc2 = 0;
+    for (int i = 0; i < nb; ++i) bcc2 = (unsigned char) (bcc2 ^ d[i]);
 
-    m = (unsigned char) (AER ^ (n == 0 ? CI0 : CI1));
-    res = write(fd, &m, 1);
+    unsigned char footer[] = {bcc2, FLAG};
+    if (write(fd, footer, sizeof(footer)) < 0) return -1;
 
-    m = 0;
-    for (int i = 0; i < nb; ++i) {
-        res = write(fd, d + i, 1);
-        m ^= d[i];
-    }
-
-    res = write(fd, &m, 1);
-
-    m = F;
-    res = write(fd, &m, 1);
     return 0;
 }
 
