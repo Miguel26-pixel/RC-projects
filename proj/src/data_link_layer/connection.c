@@ -155,3 +155,122 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool n) {
     memcpy(buf, data, i - 2);
     return (ssize_t) ds;
 }
+
+int ll_open(const char *path, bool isEmitter) {
+    if (path == NULL) return -1;
+
+    const char *s = isEmitter ? "emitter" : "receiver";
+    const char *d = isEmitter ? "receiver" : "emitter";
+
+    int fd = open_serial_port(path);
+    if (fd < 0) {
+        fprintf(stderr, RED"[%s]: opening serial port: error: %s"RESET, s, strerror(errno));
+        return -1;
+    } else {
+        printf("[%s]: opening serial port: success\n"RESET, s);
+    }
+
+    setup_alarm();
+    printf("[%s]: configuring alarm: success\n"RESET, s);
+
+    printf(YELLOW"[%s]: connecting to %s\n"RESET, s, d);
+    int r = isEmitter ? connect_to_receiver(fd) : connect_to_writer(fd);
+    if (r < 0) {
+        fprintf(stderr, RED"[%s]: connecting to %s: error\n"RESET, s, d);
+        if (close_serial_port(0) < 0) {
+            fprintf(stderr, RED"[%s]: closing serial port: error: %s"RESET, s, strerror(errno));
+        } else {
+            printf("[%s]: closing serial port: success\n"RESET, s);
+        }
+        return -1;
+    } else {
+        printf("[%s]: connecting to %s: success\n"RESET, s, d);
+    }
+    printf("FD IS: %d\n", fd);
+    return fd;
+}
+
+int ll_close(int fd, bool isEmitter) {
+    int r = isEmitter ? disconnect_from_receiver(fd) : disconnect_from_writer(fd);
+    if (r < 0) {
+        fprintf(stderr, RED"[emitter]: disconnecting: error: %s"RESET, strerror(errno));
+    } else {
+        printf("[emitter]: disconnecting: success\n"RESET);
+    }
+
+    if (close_serial_port(0) < 0) {
+        fprintf(stderr, RED"[emitter]: closing serial port: error: %s"RESET, strerror(errno));
+        return -1;
+    } else {
+        printf("[emitter]: closing serial port: success\n"RESET);
+    }
+    return 0;
+}
+
+ssize_t ll_read(int fd, void *data, size_t nb) {
+    printf(YELLOW"[receiver]: reading message (R = %d)\n"RESET, n);
+
+    ssize_t r = read_information(fd, data, nb, n);
+    if (r == -5) return -2;
+    else if (r < 0) {
+        fprintf(stderr, RED"[receiver]: reading message: error\n"RESET);
+        if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0) {
+            fprintf(stderr, RED"[receiver]: sending confirmation: error\n"RESET);
+        } else {
+            printf("[receiver]: sending reject: success\n"RESET);
+        }
+        return -1;
+    } else {
+        printf("[receiver]: read message: %s\n"RESET, (char *) data);
+    }
+
+    if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, RR(!n)) < 0) {
+        fprintf(stderr, RED"[receiver]: sending confirmation: error\n"RESET);
+        return -1;
+    } else {
+        printf("[receiver]: sending confirmation: success\n"RESET);
+        n = !n;
+        return r;
+    }
+}
+
+ssize_t ll_write(int fd, const void *data, size_t nb) {
+    int tries = 1;
+    while (tries <= MAX_ATTEMPTS) {
+        alarm(0);
+        printf("TRY: %d/%d\n", tries, MAX_ATTEMPTS);
+        printf(YELLOW"[emitter]: sending message (R = %d): message: %s\n"RESET, n, (char *) data);
+
+        ssize_t s = send_information(fd, data, nb + 1, n);
+        if (s < 0) {
+            fprintf(stderr, RED"[emitter]: sending message: error\n"RESET);
+            continue;
+        } else {
+            printf("[emitter]: sending message: success\n"RESET);
+        }
+
+        alarm(TIMEOUT);
+
+        unsigned char a, c;
+        if (read_supervision_message(fd, &a, &c) < 0 || a != ADDRESS_RECEIVER_EMITTER) {
+            ++tries;
+            fprintf(stderr, RED"[emitter]: reading confirmation: error\n"RESET);
+        } else {
+            alarm(0);
+            if (c == RR(!n)) {
+                printf("[emitter]: reading confirmation: success\n"RESET);
+                n = !n;
+                return s;
+            } else if (c == REJ(n)) {
+                fprintf(stderr, RED"[emitter]: reading confirmation: error: message rejected\n"RESET);
+                continue;
+            }
+            break;
+        }
+    }
+    if (tries == MAX_ATTEMPTS) {
+        fprintf(stderr, RED"[emitter]: sending message: error: timeout\n"RESET);
+        return -1;
+    }
+    return -1;
+}
