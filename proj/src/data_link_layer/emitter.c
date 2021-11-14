@@ -12,20 +12,18 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#define F   0x7E
-#define AER 0x03
-#define ARE 0x01
+#define FLAG   0x7E
+#define ADDRESS_EMITTER_RECEIVER 0x03
+#define ADDRESS_RECEIVER_EMITTER 0x01
 #define SET 0x03
 #define UA  0x07
 
-#define CI0 0x00
-#define CI1 0x40
+#define SET 0x03
+#define UA  0x07
+#define CI(n) (n << 6)
+#define RR(n) (0x05 | (n << 7))
+#define REJ(n) (0x01 | (n << 7))
 
-#define RR0 0x05
-#define RR1 0x85
-
-#define REJ0 0x01
-#define REJ1 0x81
 
 int fd;
 
@@ -78,7 +76,7 @@ int main(int argc, char **argv) {
             printf("[emitter]: sending message: success\n"RESET);
         }
 
-        if (read_supervision_message(ARE, (n == 0) ? RR1 : RR0) < 0) {
+        if (read_supervision_message(ADDRESS_RECEIVER_EMITTER, RR(!n)) < 0) {
             fprintf(stderr, RED"[emitter]: reading confirmation: error\n"RESET);
         } else {
             printf("[emitter]: reading confirmation: success\n"RESET);

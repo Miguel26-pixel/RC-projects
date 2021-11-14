@@ -10,20 +10,15 @@
 #define MAX_ATTEMPTS 3
 #define TIMEOUT 3
 
-#define F   0x7E
-#define AER 0x03
-#define ARE 0x01
+#define FLAG   0x7E
+#define ADDRESS_EMITTER_RECEIVER 0x03
+#define ADDRESS_RECEIVER_EMITTER 0x01
+
 #define SET 0x03
 #define UA  0x07
-
-#define CI0 0x00
-#define CI1 0x40
-
-#define RR0 0x05
-#define RR1 0x85
-
-#define REJ0 0x01
-#define REJ1 0x81
+#define CI(n) (n << 6)
+#define RR(n) (0x05 | (n << 7))
+#define REJ(n) (0x01 | (n << 7))
 
 extern int fd;
 
@@ -39,7 +34,7 @@ int read_supervision_message(unsigned char address, unsigned char control) {
         // COMBACK: Failures?
         if (read(fd, &b, 1) < 0) return -1;
         else alarm(0);
-        if (s == READ_START_FLAG && b == F) {
+        if (s == READ_START_FLAG && b == FLAG) {
             s = READ_ADDRESS;
         } else if (s == READ_ADDRESS && b == address) {
             s = READ_CONTROL;
@@ -47,7 +42,7 @@ int read_supervision_message(unsigned char address, unsigned char control) {
             s = READ_BCC;
         } else if (s == READ_BCC && b == (unsigned char) (address ^ control)) {
             s = READ_END_FLAG;
-        } else if (s == READ_END_FLAG && b == F) {
+        } else if (s == READ_END_FLAG && b == FLAG) {
             return 0;
         } else {
             s = READ_START_FLAG;
@@ -56,7 +51,7 @@ int read_supervision_message(unsigned char address, unsigned char control) {
 }
 
 ssize_t send_supervision_message(unsigned char address, unsigned char control) {
-    unsigned char message[] = {F, address, control, address ^ control, F};
+    unsigned char message[] = {FLAG, address, control, address ^ control, FLAG};
     return write(fd, message, sizeof(message));
 }
 
@@ -64,10 +59,10 @@ int connect_to_receiver(void) {
     int interrupt_count = 0;
 
     while (interrupt_count < MAX_ATTEMPTS) {
-        send_supervision_message(AER, SET);
+        send_supervision_message(ADDRESS_EMITTER_RECEIVER, SET);
         printf("[connecting]: attempt: %d\n", interrupt_count);
         alarm(TIMEOUT);
-        if (read_supervision_message(ARE, UA) < 0) interrupt_count++;
+        if (read_supervision_message(ADDRESS_RECEIVER_EMITTER, UA) < 0) interrupt_count++;
         else return 0;
     }
 
@@ -75,8 +70,8 @@ int connect_to_receiver(void) {
 }
 
 int connect_to_writer(void) {
-    if (read_supervision_message(AER, SET) < 0) return -1;
-    if (send_supervision_message(ARE, UA) < 0) return -1;
+    if (read_supervision_message(ADDRESS_EMITTER_RECEIVER, SET) < 0) return -1;
+    if (send_supervision_message(ADDRESS_RECEIVER_EMITTER, UA) < 0) return -1;
     return 0;
 }
 
@@ -116,21 +111,21 @@ int read_information(unsigned char *dest, size_t size, bool n) {
             else alarm(0);
         }
 
-        if (s == READ_FLAG_START && b == F) {
+        if (s == READ_FLAG_START && b == FLAG) {
             s = READ_ADDRESS;
-        } else if (s == READ_ADDRESS && b == AER) {
+        } else if (s == READ_ADDRESS && b == ADDRESS_EMITTER_RECEIVER) {
             s = READ_CONTROL;
             //COMBACK: Use n parameter to validate this field
-        } else if (s == READ_CONTROL && (b == CI0 || b == CI1)) {
+        } else if (s == READ_CONTROL && (b == CI(n))) {
             c = b;
             s = READ_BCC1;
-        } else if (s == READ_BCC1 && b == (unsigned char) (AER ^ c)) {
+        } else if (s == READ_BCC1 && b == (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ c)) {
             s = READ_DATA;
         } else if (s == READ_DATA) {
             // COMBACK: Buffer overflow
             dest[i] = b;
             ++i;
-            if (b == F) {
+            if (b == FLAG) {
                 done = true;
                 s = READ_BCC2;
                 // COMBACK: Most likely a function
@@ -140,7 +135,7 @@ int read_information(unsigned char *dest, size_t size, bool n) {
             //COMBACK: Implement forgiving validation: if header is valid, send reject.
         } else if (s == READ_BCC2 && dest[i - 2] == bcc2) {
             s = READ_FLAG_END;
-        } else if (s == READ_FLAG_END && dest[i - 1] == F) {
+        } else if (s == READ_FLAG_END && dest[i - 1] == FLAG) {
             memcpy(buf, dest, i - 2);
             return 0;
         } else {
