@@ -1,9 +1,7 @@
 /*Non-Canonical Input Processing*/
 
-#include <sys/types.h>
 #include <termios.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
 
 #include "include/alarm.h"
@@ -36,14 +34,8 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    int res;
     struct termios oldtio;
-    unsigned char buf[255];
-    int i, sum = 0, speed = 0, interrupt_count = 0;
-
     open_serial_port(argv[1], &oldtio);
-
-    int done = 1;
 
     setup_alarm();
 
@@ -51,8 +43,6 @@ int main(int argc, char **argv) {
         close_serial_port(&oldtio);
         return 1;
     }
-
-    puts("SET DONE");
 
     const char *strs[] = {"Esta", "mensagem", "tem", "várias", "partes", "espero", "que", "cheguem", "todas."};
     bool n = false;

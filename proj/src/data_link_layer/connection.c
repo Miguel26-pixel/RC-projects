@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <unistd.h>
 #include <string.h>
 
 
@@ -55,7 +53,6 @@ int read_supervision_message(unsigned char address, unsigned char control) {
             s == READ_START_FLAG;
         }
     }
-    return 0;
 }
 
 int send_supervision_message(unsigned char address, unsigned char control) {

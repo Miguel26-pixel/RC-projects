@@ -1,10 +1,8 @@
 #include "include/setup.h"
 #include "include/connection.h"
 
-#include <sys/types.h>
 #include <termios.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
 
