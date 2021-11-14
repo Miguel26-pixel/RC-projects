@@ -3,7 +3,7 @@
 
 #include <termios.h>
 
-int open_serial_port(const char *path, struct termios *old_configuration);
-int close_serial_port(const struct termios *old_configuration);
+int open_serial_port(const char *path);
+int close_serial_port(int fd);
 
 #endif //FEUP_RC_SETUP_H

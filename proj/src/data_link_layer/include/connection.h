@@ -19,18 +19,23 @@
 #define YELLOW "\x1b[1;33m"
 #define RESET "\x1b[1;0m"
 
-ssize_t read_supervision_message(unsigned char *address, unsigned char *control);
-ssize_t send_supervision_message(unsigned char address, unsigned char control);
+ssize_t read_supervision_message(int fd, unsigned char *address, unsigned char *control);
+ssize_t send_supervision_message(int fd, unsigned char address, unsigned char control);
 
-int connect_to_receiver(void);
-int connect_to_writer(void);
+int connect_to_receiver(int fd);
+int connect_to_writer(int fd);
 
-int disconnect_from_receiver(void);
-int disconnect_from_writer(void);
+int disconnect_from_receiver(int fd);
+int disconnect_from_writer(int fd);
 
 int calculateBCC(const unsigned char *data, unsigned char *bcc2, size_t size);
 
-ssize_t send_information(const unsigned char *data, size_t nb, bool n);
-ssize_t read_information(unsigned char *data, size_t size, bool n);
+ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool n);
+ssize_t read_information(int fd, unsigned char *data, size_t size, bool n);
+
+int ll_open(const char *path, bool isEmitter);
+int ll_close(int fd, bool isEmitter);
+ssize_t ll_read(int fd, void *data, size_t nb);
+ssize_t ll_write(int fd, const void *data, size_t nb);
 
 #endif //FEUP_RC_CONNECTION_H

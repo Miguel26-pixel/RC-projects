@@ -41,47 +41,47 @@ ssize_t read_supervision_message(unsigned char *address, unsigned char *control)
     }
 }
 
-ssize_t send_supervision_message(unsigned char address, unsigned char control) {
+ssize_t send_supervision_message(int fd, unsigned char address, unsigned char control) {
     unsigned char message[] = {FLAG, address, control, address ^ control, FLAG};
     return write(fd, message, sizeof(message));
 }
 
-int connect_to_receiver(void) {
-    int interrupt_count = 0;
+int connect_to_receiver(int fd) {
+    int interrupt_count = 1;
 
-    while (interrupt_count < MAX_ATTEMPTS) {
-        send_supervision_message(ADDRESS_EMITTER_RECEIVER, SET);
+    while (interrupt_count <= MAX_ATTEMPTS) {
+        send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, SET);
         printf("[connecting]: attempt: %d\n", interrupt_count);
         alarm(TIMEOUT);
         unsigned char a, c;
-        if (read_supervision_message(&a, &c) < 0 || a != ADDRESS_RECEIVER_EMITTER || c != UA) interrupt_count++;
+        if (read_supervision_message(fd, &a, &c) < 0 || a != ADDRESS_RECEIVER_EMITTER || c != UA) interrupt_count++;
         else return 0;
     }
 
     return -1;
 }
 
-int connect_to_writer(void) {
+int connect_to_writer(int fd) {
     unsigned char a, c;
-    if (read_supervision_message(&a, &c) < 0 || a != ADDRESS_EMITTER_RECEIVER || c != SET) return -1;
-    if (send_supervision_message(ADDRESS_RECEIVER_EMITTER, UA) < 0) return -1;
+    if (read_supervision_message(fd, &a, &c) < 0 || a != ADDRESS_EMITTER_RECEIVER || c != SET) return -1;
+    if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, UA) < 0) return -1;
     return 0;
 }
 
-int disconnect_from_receiver(void) {
-    send_supervision_message(ADDRESS_EMITTER_RECEIVER, DISC);
+int disconnect_from_receiver(int fd) {
+    send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, DISC);
     unsigned char a, c;
-    if (read_supervision_message(&a, &c) < 0 || a != ADDRESS_RECEIVER_EMITTER || c != DISC) return -1;
-    if (send_supervision_message(ADDRESS_EMITTER_RECEIVER, UA) < 0) return -1;
+    if (read_supervision_message(fd, &a, &c) < 0 || a != ADDRESS_RECEIVER_EMITTER || c != DISC) return -1;
+    if (send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, UA) < 0) return -1;
     return 0;
 }
 
-int disconnect_from_writer(void) {
-    if (send_supervision_message(ADDRESS_RECEIVER_EMITTER, DISC) < 0) return -1;
+int disconnect_from_writer(int fd) {
+    if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, DISC) < 0) return -1;
     return 0;
 }
 
-ssize_t send_information(const unsigned char *data, size_t nb, bool n) {
+ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool n) {
     unsigned char c = (unsigned char) (n << 6);
     unsigned char header[] = {FLAG, ADDRESS_EMITTER_RECEIVER, c, (unsigned char) ADDRESS_EMITTER_RECEIVER ^ c};
 
@@ -106,7 +106,7 @@ int calculateBCC(const unsigned char *data, unsigned char *bcc2, size_t size) {
     return 0;
 }
 
-ssize_t read_information(unsigned char *data, size_t size, bool n) {
+ssize_t read_information(int fd, unsigned char *data, size_t size, bool n) {
     typedef enum {
         READ_FLAG_START, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, READ_BCC2
     } state_t;
