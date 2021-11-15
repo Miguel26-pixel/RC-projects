@@ -3,7 +3,6 @@
 #include <termios.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <string.h>
 
 #define BAUDRATE B38400
@@ -48,7 +47,7 @@ int close_serial_port(int fd) {
     sleep(1);
     if (tcsetattr(fd, TCSANOW, &old_configuration) == -1) {
         perror("tcsetattr");
-        exit(-1);
+        return -1;
     }
 
     return close(fd);
