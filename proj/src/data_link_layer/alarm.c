@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+
 #include "include/alarm.h"
 
 #include <string.h>
@@ -12,4 +13,4 @@ int setup_alarm(void) {
     return sigaction(SIGALRM, &action, NULL);
 }
 
-void sigalrm_handler(int _) {}
+void sigalrm_handler(__attribute__((unused)) int _) {}

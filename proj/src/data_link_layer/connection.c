@@ -130,7 +130,6 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool n) {
     unsigned char b, c, bcc2;
     unsigned char buf[256];
     unsigned int i = 0;
-    bool done = false;
     while (true) {
         //COMBACK: Better to reorganize the loop to avoid reading sometimes.
         if (s < READ_BCC2) {
@@ -153,7 +152,6 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool n) {
             data[i] = b;
             ++i;
             if (b == FLAG) {
-                done = true;
                 s = READ_BCC2;
                 if (calculateBCC(data, &bcc2, i - 2) < 0) {}
             }
@@ -162,7 +160,6 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool n) {
             else return -3;
         } else {
             s = READ_FLAG_START;
-            done = false;
         }
     }
     size_t ds = (i - 2) <= size ? i - 2 : size;

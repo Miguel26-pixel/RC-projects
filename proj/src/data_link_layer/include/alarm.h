@@ -2,6 +2,6 @@
 #define FEUP_RC_ALARM_H
 
 int setup_alarm(void);
-void sigalrm_handler(int _);
+void sigalrm_handler(__attribute__((unused)) int _);
 
 #endif //FEUP_RC_ALARM_H
