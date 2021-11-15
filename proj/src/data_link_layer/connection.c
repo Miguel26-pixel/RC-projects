@@ -26,6 +26,10 @@
 static bool n = false;
 
 ssize_t read_supervision_message(int fd, unsigned char *address, unsigned char *control) {
+    if (address == NULL || control == NULL) {
+        return -1;
+    }
+
     typedef enum {
         READ_START_FLAG, READ_ADDRESS, READ_CONTROL, READ_BCC, READ_END_FLAG
     } state_t;
@@ -100,6 +104,10 @@ int disconnect_from_emitter(int fd) {
 }
 
 ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no) {
+    if (data == NULL) {
+        return -1;
+    }
+
     unsigned char c = (unsigned char) (no << 6);
     unsigned char header[] = {FLAG, ADDRESS_EMITTER_RECEIVER, c, (unsigned char) ADDRESS_EMITTER_RECEIVER ^ c};
 
@@ -124,13 +132,19 @@ ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no) 
 }
 
 int calculateBCC(const unsigned char *data, unsigned char *bcc2, size_t size) {
-    if (data == NULL || bcc2 == NULL) return -1;
+    if (data == NULL || bcc2 == NULL) {
+        return -1;
+    }
     *bcc2 = 0;
     for (int j = 0; j < size - 2; ++j) *bcc2 = (unsigned char) (*bcc2 ^ data[j]);
     return 0;
 }
 
 ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
+    if (data == NULL) {
+        return -1;
+    }
+
     typedef enum {
         READ_FLAG_START, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, READ_BCC2
     } state_t;
@@ -239,6 +253,10 @@ int ll_close(int fd, bool isEmitter) {
 }
 
 ssize_t ll_read(int fd, void *data, size_t nb) {
+    if (data == NULL) {
+        return -1;
+    }
+
     printf(YELLOW"[receiver]: reading message (R = %d)\n"RESET, n);
 
     ssize_t r = read_information(fd, data, nb, n);
@@ -267,6 +285,9 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
 }
 
 ssize_t ll_write(int fd, const void *data, size_t nb) {
+    if (data == NULL) {
+        return -1;
+    }
     int tries = 1;
     while (tries <= MAX_ATTEMPTS) {
         alarm(0);

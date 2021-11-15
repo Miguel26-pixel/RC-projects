@@ -10,6 +10,10 @@
 static struct termios old_configuration;
 
 int open_serial_port(const char *path) {
+    if(path == NULL) {
+        return -1;
+    }
+
     struct termios newtio;
     int fd = open(path, O_RDWR | O_NOCTTY);
     if (fd < 0) {
