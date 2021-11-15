@@ -83,17 +83,28 @@ int connect_to_emitter(int fd) {
     if (read_supervision_message(fd, &a, &c) < 0 || a != ADDRESS_EMITTER_RECEIVER || c != SET) {
         return -1;
     }
+
     if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, UA) < 0) {
         return -1;
     }
+
     return 0;
 }
 
 int disconnect_from_receiver(int fd) {
-    send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, DISC);
+    if (send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, DISC) < 0) {
+        return -1;
+    }
+
     unsigned char a, c;
-    if (read_supervision_message(fd, &a, &c) < 0 || a != ADDRESS_RECEIVER_EMITTER || c != DISC) return -1;
-    if (send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, UA) < 0) return -1;
+    if (read_supervision_message(fd, &a, &c) < 0 || a != ADDRESS_RECEIVER_EMITTER || c != DISC) {
+        return -1;
+    }
+
+    if (send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, UA) < 0) {
+        return -1;
+    }
+
     return 0;
 }
 
@@ -109,8 +120,8 @@ ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no) 
         return -1;
     }
 
-    unsigned char c = (unsigned char) (no << 6);
-    unsigned char header[] = {FLAG, ADDRESS_EMITTER_RECEIVER, c, (unsigned char) ADDRESS_EMITTER_RECEIVER ^ c};
+    unsigned char header[] = {FLAG, ADDRESS_EMITTER_RECEIVER, CI(no),
+                              (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ CI(no))};
 
     if (write(fd, header, sizeof(header)) < 0) {
         return -1;
