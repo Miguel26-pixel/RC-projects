@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #define MAX_ATTEMPTS 3
 #define TIMEOUT 3
@@ -280,10 +281,11 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
 
     printf(YELLOW"[receiver]: reading message (R = %d)\n"RESET, n);
 
+    int force_error = (rand() % 2 == 0);
     ssize_t r = read_information(fd, data, nb, n);
     if (r == -5) {
         return -2;
-    } else if (r < 0) {
+    } else if (r < 0 || force_error) {
         fprintf(stderr, RED"[receiver]: reading message: error\n"RESET);
         if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0) {
             fprintf(stderr, RED"[receiver]: sending confirmation: error\n"RESET);
