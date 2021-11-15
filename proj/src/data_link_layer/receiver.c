@@ -24,6 +24,7 @@ int main(int argc, char **argv) {
         memset(res[i], 0, sizeof(res[i]));
         ssize_t r = ll_read(fd, res[i], sizeof(res[i]));
         if (r < 0) {
+            // COMBACK: Change disconnect error code (-2)
             if (r == -2) {
                 break;
             }

@@ -70,6 +70,7 @@ int connect_to_receiver(int fd) {
         printf("[connecting]: attempt: %d\n", i);
         alarm(TIMEOUT);
         unsigned char a, c;
+        // COMBACK: The state machine does not validate the address and the control. Think about a better way.
         if (read_supervision_message(fd, &a, &c) >= 0 && a == ADDRESS_RECEIVER_EMITTER && c == UA) {
             return 0;
         }
