@@ -236,7 +236,7 @@ int ll_open(const char *path, bool is_emitter) {
     int r = is_emitter ? connect_to_receiver(fd) : connect_to_emitter(fd);
     if (r < 0) {
         fprintf(stderr, RED"[%s]: connecting to %s: error\n"RESET, source, destination);
-        if (close_serial_port(0) < 0) {
+        if (close_serial_port(fd) < 0) {
             fprintf(stderr, RED"[%s]: closing serial port: error: %s"RESET, source, strerror(errno));
         } else {
             printf("[%s]: closing serial port: success\n"RESET, source);
@@ -265,12 +265,12 @@ int ll_close(int fd, bool is_emitter) {
         printf("[%s]: disconnecting: success\n"RESET, source);
     }
 
-    if (close_serial_port(0) < 0) {
+    if (close_serial_port(fd) < 0) {
         fprintf(stderr, RED"[%s]: closing serial port: error: %s"RESET, source, strerror(errno));
         return -1;
     } else {
-        printf("[%s]: closing serial port: success\n"RESET, source);
-    }
+        printf("[%s]: closing serial port: success\n"RESET, source);}
+
     return 0;
 }
 
