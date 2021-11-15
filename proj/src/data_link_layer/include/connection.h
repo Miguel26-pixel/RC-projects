@@ -22,8 +22,8 @@ int calculateBCC(const unsigned char *data, unsigned char *bcc2, size_t size);
 ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no);
 ssize_t read_information(int fd, unsigned char *data, size_t size, bool no);
 
-int ll_open(const char *path, bool isEmitter);
-int ll_close(int fd, bool isEmitter);
+int ll_open(const char *path, bool is_emitter);
+int ll_close(int fd, bool is_emitter);
 ssize_t ll_read(int fd, void *data, size_t nb);
 ssize_t ll_write(int fd, const void *data, size_t nb);
 

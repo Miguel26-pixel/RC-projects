@@ -195,13 +195,13 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
     return (ssize_t) ds;
 }
 
-int ll_open(const char *path, bool isEmitter) {
+int ll_open(const char *path, bool is_emitter) {
     if (path == NULL) {
         return -1;
     }
 
     const char *source, *destination;
-    if (isEmitter) {
+    if (is_emitter) {
         destination = "receiver";
         source = "emitter";
     } else {
@@ -221,7 +221,7 @@ int ll_open(const char *path, bool isEmitter) {
     printf("[%s]: configuring alarm: success\n"RESET, source);
 
     printf(YELLOW"[%s]: connecting to %s\n"RESET, source, destination);
-    int r = isEmitter ? connect_to_receiver(fd) : connect_to_emitter(fd);
+    int r = is_emitter ? connect_to_receiver(fd) : connect_to_emitter(fd);
     if (r < 0) {
         fprintf(stderr, RED"[%s]: connecting to %s: error\n"RESET, source, destination);
         if (close_serial_port(0) < 0) {
@@ -236,19 +236,28 @@ int ll_open(const char *path, bool isEmitter) {
     return fd;
 }
 
-int ll_close(int fd, bool isEmitter) {
-    int r = isEmitter ? disconnect_from_receiver(fd) : disconnect_from_emitter(fd);
-    if (r < 0) {
-        fprintf(stderr, RED"[emitter]: disconnecting: error: %s"RESET, strerror(errno));
+int ll_close(int fd, bool is_emitter) {
+    const char *source;
+    int r;
+    if (is_emitter) {
+        source = "emitter";
+        r = disconnect_from_receiver(fd);
     } else {
-        printf("[emitter]: disconnecting: success\n"RESET);
+        source = "receiver";
+        r = disconnect_from_emitter(fd);
+    }
+
+    if (r < 0) {
+        fprintf(stderr, RED"[%s]: disconnecting: error: %s"RESET, source, strerror(errno));
+    } else {
+        printf("[%s]: disconnecting: success\n"RESET, source);
     }
 
     if (close_serial_port(0) < 0) {
-        fprintf(stderr, RED"[emitter]: closing serial port: error: %s"RESET, strerror(errno));
+        fprintf(stderr, RED"[%s]: closing serial port: error: %s"RESET, source, strerror(errno));
         return -1;
     } else {
-        printf("[emitter]: closing serial port: success\n"RESET);
+        printf("[%s]: closing serial port: success\n"RESET, source);
     }
     return 0;
 }
