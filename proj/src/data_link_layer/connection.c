@@ -26,7 +26,6 @@
 static bool n = false;
 
 ssize_t read_supervision_message(int fd, unsigned char *address, unsigned char *control) {
-
     typedef enum {
         READ_START_FLAG, READ_ADDRESS, READ_CONTROL, READ_BCC, READ_END_FLAG
     } state_t;
@@ -61,24 +60,27 @@ ssize_t send_supervision_message(int fd, unsigned char address, unsigned char co
 }
 
 int connect_to_receiver(int fd) {
-    int interrupt_count = 1;
-
-    while (interrupt_count <= MAX_ATTEMPTS) {
+    int i;
+    for (i = 1; i <= MAX_ATTEMPTS; ++i) {
         send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, SET);
-        printf("[connecting]: attempt: %d\n", interrupt_count);
+        printf("[connecting]: attempt: %d\n", i);
         alarm(TIMEOUT);
         unsigned char a, c;
-        if (read_supervision_message(fd, &a, &c) < 0 || a != ADDRESS_RECEIVER_EMITTER || c != UA) interrupt_count++;
-        else return 0;
+        if (read_supervision_message(fd, &a, &c) >= 0 && a == ADDRESS_RECEIVER_EMITTER && c == UA) {
+            return 0;
+        }
     }
-
     return -1;
 }
 
-int connect_to_writer(int fd) {
+int connect_to_emitter(int fd) {
     unsigned char a, c;
-    if (read_supervision_message(fd, &a, &c) < 0 || a != ADDRESS_EMITTER_RECEIVER || c != SET) return -1;
-    if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, UA) < 0) return -1;
+    if (read_supervision_message(fd, &a, &c) < 0 || a != ADDRESS_EMITTER_RECEIVER || c != SET) {
+        return -1;
+    }
+    if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, UA) < 0) {
+        return -1;
+    }
     return 0;
 }
 
@@ -90,25 +92,33 @@ int disconnect_from_receiver(int fd) {
     return 0;
 }
 
-int disconnect_from_writer(int fd) {
-    if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, DISC) < 0) return -1;
+int disconnect_from_emitter(int fd) {
+    if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, DISC) < 0) {
+        return -1;
+    }
     return 0;
 }
 
-ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool n) {
-    unsigned char c = (unsigned char) (n << 6);
+ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no) {
+    unsigned char c = (unsigned char) (no << 6);
     unsigned char header[] = {FLAG, ADDRESS_EMITTER_RECEIVER, c, (unsigned char) ADDRESS_EMITTER_RECEIVER ^ c};
 
-    if (write(fd, header, sizeof(header)) < 0) return -1;
+    if (write(fd, header, sizeof(header)) < 0) {
+        return -1;
+    }
 
     ssize_t res = write(fd, data, nb);
-    if (res < 0) return -1;
+    if (res < 0) {
+        return -1;
+    }
 
     unsigned char bcc2;
     calculateBCC(data, &bcc2, nb);
 
     unsigned char footer[] = {bcc2, FLAG};
-    if (write(fd, footer, sizeof(footer)) < 0) return -1;
+    if (write(fd, footer, sizeof(footer)) < 0) {
+        return -1;
+    }
 
     return res;
 }
@@ -120,7 +130,7 @@ int calculateBCC(const unsigned char *data, unsigned char *bcc2, size_t size) {
     return 0;
 }
 
-ssize_t read_information(int fd, unsigned char *data, size_t size, bool n) {
+ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
     typedef enum {
         READ_FLAG_START, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, READ_BCC2
     } state_t;
@@ -141,11 +151,11 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool n) {
             s = READ_ADDRESS;
         } else if (s == READ_ADDRESS && b == ADDRESS_EMITTER_RECEIVER) {
             s = READ_CONTROL;
-        } else if (s == READ_CONTROL && (b == CI(n) || b == DISC)) {
+        } else if (s == READ_CONTROL && (b == CI(no) || b == DISC)) {
             c = b;
             s = READ_BCC1;
         } else if (s == READ_BCC1 && b == (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ c)) {
-            if (c == CI(n)) s = READ_DATA;
+            if (c == CI(no)) s = READ_DATA;
             else if (c == DISC) return -5;
         } else if (s == READ_DATA) {
             if (i > size) return -2;
@@ -156,8 +166,11 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool n) {
                 if (calculateBCC(data, &bcc2, i - 2) < 0) {}
             }
         } else if (s == READ_BCC2) {
-            if (data[i - 2] == bcc2) break;
-            else return -3;
+            if (data[i - 2] == bcc2) {
+                break;
+            } else {
+                return -3;
+            }
         } else {
             s = READ_FLAG_START;
         }
@@ -168,41 +181,48 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool n) {
 }
 
 int ll_open(const char *path, bool isEmitter) {
-    if (path == NULL) return -1;
+    if (path == NULL) {
+        return -1;
+    }
 
-    const char *s = isEmitter ? "emitter" : "receiver";
-    const char *d = isEmitter ? "receiver" : "emitter";
+    const char *source, *destination;
+    if (isEmitter) {
+        destination = "receiver";
+        source = "emitter";
+    } else {
+        source = "receiver";
+        destination = "emitter";
+    }
 
     int fd = open_serial_port(path);
     if (fd < 0) {
-        fprintf(stderr, RED"[%s]: opening serial port: error: %s"RESET, s, strerror(errno));
+        fprintf(stderr, RED"[%s]: opening serial port: error: %s"RESET, source, strerror(errno));
         return -1;
     } else {
-        printf("[%s]: opening serial port: success\n"RESET, s);
+        printf("[%s]: opening serial port: success\n"RESET, source);
     }
 
     setup_alarm();
-    printf("[%s]: configuring alarm: success\n"RESET, s);
+    printf("[%s]: configuring alarm: success\n"RESET, source);
 
-    printf(YELLOW"[%s]: connecting to %s\n"RESET, s, d);
-    int r = isEmitter ? connect_to_receiver(fd) : connect_to_writer(fd);
+    printf(YELLOW"[%s]: connecting to %s\n"RESET, source, destination);
+    int r = isEmitter ? connect_to_receiver(fd) : connect_to_emitter(fd);
     if (r < 0) {
-        fprintf(stderr, RED"[%s]: connecting to %s: error\n"RESET, s, d);
+        fprintf(stderr, RED"[%s]: connecting to %s: error\n"RESET, source, destination);
         if (close_serial_port(0) < 0) {
-            fprintf(stderr, RED"[%s]: closing serial port: error: %s"RESET, s, strerror(errno));
+            fprintf(stderr, RED"[%s]: closing serial port: error: %s"RESET, source, strerror(errno));
         } else {
-            printf("[%s]: closing serial port: success\n"RESET, s);
+            printf("[%s]: closing serial port: success\n"RESET, source);
         }
         return -1;
     } else {
-        printf("[%s]: connecting to %s: success\n"RESET, s, d);
+        printf("[%s]: connecting to %s: success\n"RESET, source, destination);
     }
-    printf("FD IS: %d\n", fd);
     return fd;
 }
 
 int ll_close(int fd, bool isEmitter) {
-    int r = isEmitter ? disconnect_from_receiver(fd) : disconnect_from_writer(fd);
+    int r = isEmitter ? disconnect_from_receiver(fd) : disconnect_from_emitter(fd);
     if (r < 0) {
         fprintf(stderr, RED"[emitter]: disconnecting: error: %s"RESET, strerror(errno));
     } else {
@@ -222,8 +242,9 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
     printf(YELLOW"[receiver]: reading message (R = %d)\n"RESET, n);
 
     ssize_t r = read_information(fd, data, nb, n);
-    if (r == -5) return -2;
-    else if (r < 0) {
+    if (r == -5) {
+        return -2;
+    } else if (r < 0) {
         fprintf(stderr, RED"[receiver]: reading message: error\n"RESET);
         if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0) {
             fprintf(stderr, RED"[receiver]: sending confirmation: error\n"RESET);
@@ -274,14 +295,8 @@ ssize_t ll_write(int fd, const void *data, size_t nb) {
                 return s;
             } else if (c == REJ(n)) {
                 fprintf(stderr, RED"[emitter]: reading confirmation: error: message rejected\n"RESET);
-                continue;
             }
-            break;
         }
-    }
-    if (tries == MAX_ATTEMPTS) {
-        fprintf(stderr, RED"[emitter]: sending message: error: timeout\n"RESET);
-        return -1;
     }
     return -1;
 }

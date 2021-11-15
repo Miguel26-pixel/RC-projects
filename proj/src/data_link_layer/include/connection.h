@@ -12,15 +12,15 @@ ssize_t read_supervision_message(int fd, unsigned char *address, unsigned char *
 ssize_t send_supervision_message(int fd, unsigned char address, unsigned char control);
 
 int connect_to_receiver(int fd);
-int connect_to_writer(int fd);
+int connect_to_emitter(int fd);
 
 int disconnect_from_receiver(int fd);
-int disconnect_from_writer(int fd);
+int disconnect_from_emitter(int fd);
 
 int calculateBCC(const unsigned char *data, unsigned char *bcc2, size_t size);
 
-ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool n);
-ssize_t read_information(int fd, unsigned char *data, size_t size, bool n);
+ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no);
+ssize_t read_information(int fd, unsigned char *data, size_t size, bool no);
 
 int ll_open(const char *path, bool isEmitter);
 int ll_close(int fd, bool isEmitter);
