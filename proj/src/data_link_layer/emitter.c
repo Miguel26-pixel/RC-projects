@@ -36,7 +36,8 @@ int main(int argc, char **argv) {
     for (int i = 0; i < message_length; ++i) {
         printf("MESSAGE: %d/%zu\n", i + 1, message_length);
         if (ll_write(fd, message[i], strlen(message[i]) + 1) < 0) {
-            break;
+            fprintf(stderr, RED"[emitter]: max attemps reached: aborting\n"RESET);
+            exit(-1);
         }
     }
 

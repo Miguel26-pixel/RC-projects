@@ -49,6 +49,9 @@ ssize_t read_supervision_message(int fd, unsigned char *address, unsigned char *
         // COMBACK: Failures?
         if (read(fd, &b, 1) < 0) return -1;
         else alarm(0);
+        
+        printf("%x\n",b);
+        
         if (s == READ_START_FLAG && b == FLAG) {
             s = READ_ADDRESS;
         } else if (s == READ_ADDRESS) {
@@ -59,6 +62,8 @@ ssize_t read_supervision_message(int fd, unsigned char *address, unsigned char *
             s = READ_BCC;
         } else if (s == READ_BCC && b == (unsigned char) (*address ^ *control)) {
             s = READ_END_FLAG;
+        } else if (s == READ_BCC && b != (unsigned char) (*address ^ *control)) {
+            printf("ERRO AQUI - b = %x address = %x control = %x xor = %x  -> 03 ^ 07 = %x\n", b, *address, *control, (unsigned char) (*address ^ *control),0x03 ^ 0x07);
         } else if (s == READ_END_FLAG && b == FLAG) {
             return 0;
         } else {
@@ -114,6 +119,8 @@ int disconnect_from_receiver(int fd) {
         return -1;
     }
 
+    puts("send UA");
+
     return 0;
 }
 
@@ -121,6 +128,12 @@ int disconnect_from_emitter(int fd) {
     if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, DISC) < 0) {
         return -1;
     }
+    puts("a ler UA");
+    unsigned char a, c;
+    if (read_supervision_message(fd, &a, &c) < 0 || a != ADDRESS_EMITTER_RECEIVER || c != UA) {
+        return -1;
+    }
+
     return 0;
 }
 
@@ -216,10 +229,13 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
             s = READ_BCC1;
         } else if (s == READ_BCC1 && b == (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ c)) {
             if (c == CI(no)) s = READ_DATA;
-            else if (c == DISC) return -5;
+            else if (c == DISC) {
+                if (read(fd, &b, 1) < 0) { return -1; }
+                else { return -5; } 
+            }
         } else if (s == READ_DATA) {
             if (i > size) return -2;
-            // Aqui falta byte stuffing
+            
             if (b == ESC11) {
                 char b2;
                 if (read(fd, &b2, 1) < 0) {}
@@ -303,6 +319,9 @@ int ll_open(const char *path, bool is_emitter) {
 int ll_close(int fd, bool is_emitter) {
     const char *source;
     int r;
+
+    puts("ksajhgakjhsd");
+
     if (is_emitter) {
         source = "emitter";
         r = disconnect_from_receiver(fd);
@@ -310,7 +329,7 @@ int ll_close(int fd, bool is_emitter) {
         source = "receiver";
         r = disconnect_from_emitter(fd);
     }
-
+    puts("ksajhgakjhsd");
     if (r < 0) {
         fprintf(stderr, RED"[%s]: disconnecting: error: %s"RESET, source, strerror(errno));
     } else {

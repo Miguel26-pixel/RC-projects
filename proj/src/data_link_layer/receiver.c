@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
     for (int j = 0; j < i; ++j) {
         printf(" %s"RESET, res[j]);
     }
-    printf(".\n"RESET);
+    printf("\n"RESET);
 
     if (ll_close(fd, false) < 0) {
         exit(-1);
