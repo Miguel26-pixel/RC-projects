@@ -137,31 +137,28 @@ ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no) 
     }
 
 
-    ssize_t res, n;
+    ssize_t res = 0, v;
     for (size_t i = 0; i < nb; ++i) {
-    
         if (data[i] == REP1) {
-            char m[] = {ESC11, ESC12};
-            n = write(fd, m, 2);
-            if (n < 0) {
+            unsigned char m[] = {ESC11, ESC12};
+            v = write(fd, m, 2);
+            if (v < 0) {
                 return -1;
             }
-            res += n;
-        }
-        else if (data[i] == REP2) {
+            res += v;
+        } else if (data[i] == REP2) {
             char m[] = {ESC21, ESC22};
-            n = write(fd, m, 2);
-            if (n < 0) {
+            v = write(fd, m, 2);
+            if (v < 0) {
                 return -1;
             }
-            res += n;
-        }
-        else {
-            n = write(fd, data + i, 1);
-            if (n < 0) {
+            res += v;
+        } else {
+            v = write(fd, data + i, 1);
+            if (v < 0) {
                 return -1;
             }
-            res += n;
+            res += v;
         }
     }
 
@@ -169,9 +166,21 @@ ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no) 
     unsigned char bcc2;
     calculateBCC(data, &bcc2, nb);
 
-    unsigned char footer[] = {bcc2, FLAG};
-    if (write(fd, footer, sizeof(footer)) < 0) {
-        return -1;
+    if (bcc2 == REP1) {
+        unsigned char footer[] = {ESC11, ESC12, FLAG};
+        if (write(fd, footer, sizeof(footer)) < 0) {
+            return -1;
+        }
+    } else if (bcc2 == REP2) {
+        unsigned char footer[] = {ESC21, ESC22, FLAG};
+        if (write(fd, footer, sizeof(footer)) < 0) {
+            return -1;
+        }
+    } else {
+        unsigned char footer[] = {bcc2, FLAG};
+        if (write(fd, footer, sizeof(footer)) < 0) {
+            return -1;
+        }
     }
 
     return res;
@@ -219,33 +228,35 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
             else if (c == DISC) return -5;
         } else if (s == READ_DATA) {
             if (i > size) return -2;
-            // Aqui falta byte stuffing
             if (b == ESC11) {
                 char b2;
                 if (read(fd, &b2, 1) < 0) {}
                 if (b2 == ESC12) {
                     data[i] = REP1;
                     ++i;
-                }           
-            }
-            else if (b == ESC21) {
+                } else {
+                    data[i] = b;
+                    ++i;
+                }
+            } else if (b == ESC21) {
                 char b2;
                 if (read(fd, &b2, 1) < 0) {}
                 if (b2 == ESC22) {
                     data[i] = REP2;
                     ++i;
-                }           
-            }
-            else {
+                } else {
+                    data[i] = b;
+                    ++i;
+                }
+            } else {
                 data[i] = b;
                 ++i;
             }
             if (b == FLAG) {
                 s = READ_BCC2;
-                if (calculateBCC(data, &bcc2, i - 2) < 0) {}
             }
-        }
-         else if (s == READ_BCC2) {
+        } else if (s == READ_BCC2) {
+            calculateBCC(data, &bcc2, i - 2);
             if (data[i - 2] == bcc2) {
                 break;
             } else {
@@ -321,7 +332,8 @@ int ll_close(int fd, bool is_emitter) {
         fprintf(stderr, RED"[%s]: closing serial port: error: %s"RESET, source, strerror(errno));
         return -1;
     } else {
-        printf("[%s]: closing serial port: success\n"RESET, source);}
+        printf("[%s]: closing serial port: success\n"RESET, source);
+    }
 
     return 0;
 }
