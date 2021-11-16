@@ -50,6 +50,7 @@ ssize_t read_supervision_message(int fd, unsigned char *address, unsigned char *
         if (read(fd, &b, 1) < 0) return -1;
         else alarm(0);
         
+        
         if (s == READ_START_FLAG && b == FLAG) {
             s = READ_ADDRESS;
         } else if (s == READ_ADDRESS) {
@@ -207,7 +208,7 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
     }
 
     typedef enum {
-        READ_FLAG_START, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, READ_BCC2
+        READ_FLAG_START, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, READ_BCC2, IGNORE
     } state_t;
 
     state_t s = READ_FLAG_START;
@@ -226,20 +227,25 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
             s = READ_ADDRESS;
         } else if (s == READ_ADDRESS && b == ADDRESS_EMITTER_RECEIVER) {
             s = READ_CONTROL;
-        } else if (s == READ_CONTROL && (b == CI(no) || b == DISC)) {
+        } else if (s == READ_CONTROL && (b != CI(no) || b == CI(no) || b == DISC)) {
             c = b;
             s = READ_BCC1;
         } else if (s == READ_BCC1 && b == (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ c)) {
-            if (c == CI(no)) s = READ_DATA;
-            else if (c == DISC) {
+            s = READ_DATA;
+            if (c == DISC) {
                 if (read(fd, &b, 1) < 0) { return -1; }
                 else { return -5; } 
             }
         } else if (s == READ_DATA) {
+            
+            if (b == FLAG) { s = READ_BCC2; }
+            if (c != CI(no)) { continue; }
+
             if (i > size) return -2;
             if (b == ESC11) {
                 char b2;
                 if (read(fd, &b2, 1) < 0) {}
+                
                 if (b2 == ESC12) {
                     data[i] = REP1;
                     ++i;
@@ -261,10 +267,9 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
                 data[i] = b;
                 ++i;
             }
-            if (b == FLAG) {
-                s = READ_BCC2;
-            }
+            
         } else if (s == READ_BCC2) {
+            if (c != CI(no)) return -7;
             calculateBCC(data, &bcc2, i - 2);
             if (data[i - 2] == bcc2) {
                 break;
@@ -354,11 +359,13 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
 
     printf(YELLOW"[receiver]: reading message (R = %d)\n"RESET, n);
 
-    int force_error = (rand() % 2 == 0);
+    //int force_error = (rand() % 2 == 0);
     ssize_t r = read_information(fd, data, nb, n);
     if (r == -5) {
         return -2;
-    } else if (r < 0 || force_error) {
+    } else if (r == -7) {
+        n = !n;
+    } else if (r < 0 /*|| force_error*/) {
         fprintf(stderr, RED"[receiver]: reading message: error\n"RESET);
         if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0) {
             fprintf(stderr, RED"[receiver]: sending confirmation: error\n"RESET);
@@ -380,12 +387,15 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
     }
 }
 
+int count = 0;
+
 ssize_t ll_write(int fd, const void *data, size_t nb) {
     if (data == NULL) {
         return -1;
     }
     int tries = 1;
     while (tries <= MAX_ATTEMPTS) {
+        count++;
         alarm(0);
         printf("TRY: %d/%d\n", tries, MAX_ATTEMPTS);
         printf(YELLOW"[emitter]: sending message (R = %d): message: %s\n"RESET, n, (char *) data);
@@ -408,12 +418,13 @@ ssize_t ll_write(int fd, const void *data, size_t nb) {
             alarm(0);
             if (c == RR(!n)) {
                 printf("[emitter]: reading confirmation: success\n"RESET);
-                n = !n;
+                if (count % 2 == 0) n = !n;
                 return s;
             } else if (c == REJ(n)) {
                 fprintf(stderr, RED"[emitter]: reading confirmation: error: message rejected\n"RESET);
             }
         }
+       
     }
     return -1;
 }
