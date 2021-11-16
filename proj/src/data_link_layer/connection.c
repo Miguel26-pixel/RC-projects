@@ -24,6 +24,14 @@
 #define RR(n) (0x05 | ((n) << 7))
 #define REJ(n) (0x01 | ((n) << 7))
 
+#define ESC11 0x7D
+#define ESC12 0x5E
+#define REP1 0x7E
+
+#define ESC21 0x7D
+#define ESC22 0x5D
+#define REP2 0x7D
+
 static bool n = false;
 
 ssize_t read_supervision_message(int fd, unsigned char *address, unsigned char *control) {
@@ -128,10 +136,35 @@ ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no) 
         return -1;
     }
 
-    ssize_t res = write(fd, data, nb);
-    if (res < 0) {
-        return -1;
+
+    ssize_t res, n;
+    for (size_t i = 0; i < nb; ++i) {
+    
+        if (data[i] == REP1) {
+            char m[] = {ESC11, ESC12};
+            n = write(fd, m, 2);
+            if (n < 0) {
+                return -1;
+            }
+            res += n;
+        }
+        else if (data[i] == REP2) {
+            char m[] = {ESC21, ESC22};
+            n = write(fd, m, 2);
+            if (n < 0) {
+                return -1;
+            }
+            res += n;
+        }
+        else {
+            n = write(fd, data + i, 1);
+            if (n < 0) {
+                return -1;
+            }
+            res += n;
+        }
     }
+
 
     unsigned char bcc2;
     calculateBCC(data, &bcc2, nb);
@@ -186,13 +219,33 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
             else if (c == DISC) return -5;
         } else if (s == READ_DATA) {
             if (i > size) return -2;
-            data[i] = b;
-            ++i;
+            // Aqui falta byte stuffing
+            if (b == ESC11) {
+                char b2;
+                if (read(fd, &b2, 1) < 0) {}
+                if (b2 == ESC12) {
+                    data[i] = REP1;
+                    ++i;
+                }           
+            }
+            else if (b == ESC21) {
+                char b2;
+                if (read(fd, &b2, 1) < 0) {}
+                if (b2 == ESC22) {
+                    data[i] = REP2;
+                    ++i;
+                }           
+            }
+            else {
+                data[i] = b;
+                ++i;
+            }
             if (b == FLAG) {
                 s = READ_BCC2;
                 if (calculateBCC(data, &bcc2, i - 2) < 0) {}
             }
-        } else if (s == READ_BCC2) {
+        }
+         else if (s == READ_BCC2) {
             if (data[i - 2] == bcc2) {
                 break;
             } else {
@@ -203,7 +256,6 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
         }
     }
     size_t ds = (i - 2) <= size ? i - 2 : size;
-    memcpy(buf, data, i - 2);
     return (ssize_t) ds;
 }
 
