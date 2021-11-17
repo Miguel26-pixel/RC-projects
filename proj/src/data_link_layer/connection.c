@@ -187,7 +187,7 @@ int calculateBCC(const unsigned char *data, unsigned char *bcc2, size_t size) {
     if (data == NULL || bcc2 == NULL) return NULL_POINTER_ERROR;
 
     *bcc2 = 0;
-    for (int j = 0; j < size - 2; ++j) *bcc2 = (unsigned char) (*bcc2 ^ data[j]);
+    for (int j = 0; j < size; ++j) *bcc2 = (unsigned char) (*bcc2 ^ data[j]);
     return SUCCESS;
 }
 
