@@ -1,4 +1,6 @@
 #include "include/port.h"
+#include "include/errnos.h"
+
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
@@ -11,20 +13,20 @@ static struct termios old_configuration;
 
 int open_serial_port(const char *path) {
     if(path == NULL) {
-        return -1;
+        return NULL_POINTER_ERROR;
     }
 
     struct termios newtio;
     int fd = open(path, O_RDWR | O_NOCTTY);
     if (fd < 0) {
         perror(path);
-        return -1;
+        return IO_ERROR;
     }
 
     if (tcgetattr(fd, &old_configuration) == -1) {
         perror("tcgetattr");
         close(fd);
-        return -1;
+        return CONFIGURATION_ERROR;
     }
     memset(&newtio, 0, sizeof(newtio));
     newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
@@ -41,7 +43,7 @@ int open_serial_port(const char *path) {
     if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
         perror("tcsetattr");
         close(fd);
-        return -1;
+        return CONFIGURATION_ERROR;
     }
 
     return fd;
@@ -51,7 +53,7 @@ int close_serial_port(int fd) {
     sleep(1);
     if (tcsetattr(fd, TCSANOW, &old_configuration) == -1) {
         perror("tcsetattr");
-        return -1;
+        return CONFIGURATION_ERROR;
     }
 
     return close(fd);
