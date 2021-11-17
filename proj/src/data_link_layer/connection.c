@@ -45,7 +45,6 @@ ssize_t read_supervision_message(int fd, unsigned char *address, unsigned char *
     state_t s = READ_START_FLAG;
     unsigned char b;
     while (true) {
-        // COMBACK: Failures?
         if (read(fd, &b, 1) < 0) {
             if (errno == EINTR) return TIMED_OUT;
             else return IO_ERROR;
@@ -143,53 +142,46 @@ ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no) 
         return -1;
     }
 
-
+    size_t k;
+    unsigned char a[3];
     ssize_t res = 0, v;
     for (size_t i = 0; i < nb; ++i) {
+        k = 0;
         if (data[i] == REP1) {
-            unsigned char m[] = {ESC11, ESC12};
-            v = write(fd, m, 2);
-            if (v < 0) {
-                return -1;
-            }
-            res += v;
+            a[k++] = ESC11;
+            a[k++] = ESC12;
         } else if (data[i] == REP2) {
-            char m[] = {ESC21, ESC22};
-            v = write(fd, m, 2);
-            if (v < 0) {
-                return -1;
-            }
-            res += v;
+            a[k++] = ESC21;
+            a[k++] = ESC22;
         } else {
-            v = write(fd, data + i, 1);
-            if (v < 0) {
-                return -1;
-            }
-            res += v;
+            a[k++] = data[i];
         }
+        v = write(fd, a, k);
+        if (v < 0) {
+            if (errno == EINTR) return TIMED_OUT;
+            else return IO_ERROR;
+        }
+        res += v;
     }
-
 
     unsigned char bcc2;
     calculateBCC(data, &bcc2, nb);
 
+    k = 0;
     if (bcc2 == REP1) {
-        unsigned char footer[] = {ESC11, ESC12, FLAG};
-        if (write(fd, footer, sizeof(footer)) < 0) {
-            return -1;
-        }
+        a[k++] = ESC11;
+        a[k++] = ESC12;
     } else if (bcc2 == REP2) {
-        unsigned char footer[] = {ESC21, ESC22, FLAG};
-        if (write(fd, footer, sizeof(footer)) < 0) {
-            return -1;
-        }
+        a[k++] = ESC21;
+        a[k++] = ESC22;
     } else {
-        unsigned char footer[] = {bcc2, FLAG};
-        if (write(fd, footer, sizeof(footer)) < 0) {
-            return -1;
-        }
+        a[k++] = bcc2;
     }
-
+    a[k++] = FLAG;
+    if (write(fd, a, k) < 0) {
+        if (errno == EINTR) return TIMED_OUT;
+        else return IO_ERROR;
+    }
     return res;
 }
 
@@ -211,7 +203,6 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
     state_t s = READ_FLAG_START;
 
     unsigned char b, c, bcc2;
-    unsigned char buf[256];
     unsigned int i = 0;
     while (true) {
         //COMBACK: Better to reorganize the loop to avoid reading sometimes.
@@ -243,50 +234,35 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
             }
         } else if (s == READ_DATA) {
             if (i > size) return BUFFER_OVERFLOW;
-            if (b == ESC11) {
+
+            if (b == ESC11 || b == ESC21) {
                 char b2;
                 if (read(fd, &b2, 1) < 0) {
                     if (errno == EINTR) return TIMED_OUT;
                     else return IO_ERROR;
                 }
-                if (b2 == ESC12) {
-                    data[i] = REP1;
-                    ++i;
+                if (b == ESC11 && b2 == ESC12) {
+                    data[i++] = REP1;
+                } else if (b == ESC21 && b2 == ESC22) {
+                    data[i++] = REP2;
                 } else {
-                    data[i] = b;
-                    ++i;
-                }
-            } else if (b == ESC21) {
-                char b2;
-                if (read(fd, &b2, 1) < 0) {
-                    if (errno == EINTR) return TIMED_OUT;
-                    else return IO_ERROR;
-                }
-                if (b2 == ESC22) {
-                    data[i] = REP2;
-                    ++i;
-                } else {
-                    data[i] = b;
-                    ++i;
+                    data[i++] = b;
+                    data[i++] = b2;
                 }
             } else {
-                data[i] = b;
-                ++i;
+                data[i++] = b;
             }
-            if (b == FLAG) {
-                s = READ_BCC2;
-            }
+
+            if (b == FLAG) s = READ_BCC2;
         } else if (s == READ_BCC2) {
             calculateBCC(data, &bcc2, i - 2);
-            if (data[i - 2] == bcc2) {
-                break;
-            } else {
-                return PARITY_ERROR;
-            }
+            if (data[i - 2] == bcc2) break;
+            else return PARITY_ERROR;
         } else {
             s = READ_FLAG_START;
         }
     }
+
     size_t ds = (i - 2) <= size ? i - 2 : size;
     return (ssize_t) ds;
 }
