@@ -339,6 +339,7 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
 
     ssize_t r = read_information(fd, data, nb, n);
     if (r == EOF_DISCONNECT) {
+        printf("[receiver]: received disconnect\n"RESET);
         return EOF_DISCONNECT;
     } else if (r < 0) {
         fprintf(stderr, RED"[receiver]: reading message: error\n"RESET);
