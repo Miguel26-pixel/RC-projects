@@ -253,6 +253,7 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
 
             if (b == FLAG) s = READ_BCC2;
         } else if (s == READ_BCC2) {
+            if (c == CI(!n)) return OUT_OF_ORDER;
             calculateBCC(data, &bcc2, i - 2);
             if (data[i - 2] == bcc2) break;
             else return PARITY_ERROR;
@@ -341,6 +342,8 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
     if (r == EOF_DISCONNECT) {
         printf("[receiver]: received disconnect\n"RESET);
         return EOF_DISCONNECT;
+    } else if (r == OUT_OF_ORDER) {
+        n = !n;
     } else if (r < 0) {
         fprintf(stderr, RED"[receiver]: reading message: error\n"RESET);
         if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0) {
