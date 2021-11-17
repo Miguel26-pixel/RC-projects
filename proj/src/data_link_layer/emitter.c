@@ -1,4 +1,5 @@
 #include "include/connection.h"
+#include "include/errnos.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -43,7 +44,7 @@ int main(int argc, char **argv) {
         printf("MESSAGE: %d/%zu\n", i + 1, message_length);
         r = ll_write(fd, message[i], strlen(message[i]) + 1);
         if (r < 0) {
-            fprintf(stderr, RED"[emitter]: max attemps reached: aborting\n"RESET);
+            if(r == TOO_MANY_ATTEMPTS) fprintf(stderr, RED"[emitter]: max attempts reached: aborting\n"RESET);
             exit(-1);
         }
     }
