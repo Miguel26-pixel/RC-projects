@@ -138,9 +138,7 @@ ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no) 
     unsigned char header[] = {FLAG, ADDRESS_EMITTER_RECEIVER, CI(no),
                               (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ CI(no))};
 
-    if (write(fd, header, sizeof(header)) < 0) {
-        return -1;
-    }
+    if (write(fd, header, sizeof(header)) < 0) return IO_ERROR;
 
     size_t k;
     unsigned char a[3];
@@ -282,7 +280,7 @@ int ll_open(const char *path, bool is_emitter) {
     int fd = open_serial_port(path);
     if (fd < 0) {
         fprintf(stderr, RED"[%s]: opening serial port: error: %s"RESET, source, strerror(errno));
-        return -1;
+        return fd;
     } else {
         printf("[%s]: opening serial port: success\n"RESET, source);
     }
@@ -339,30 +337,28 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
 
     printf(YELLOW"[receiver]: reading message (R = %d)\n"RESET, n);
 
-    int force_error = (rand() % 2 == 0);
     ssize_t r = read_information(fd, data, nb, n);
     if (r == EOF_DISCONNECT) {
         return EOF_DISCONNECT;
-    } else if (r < 0 || force_error) {
+    } else if (r < 0) {
         fprintf(stderr, RED"[receiver]: reading message: error\n"RESET);
         if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0) {
             fprintf(stderr, RED"[receiver]: sending confirmation: error\n"RESET);
         } else {
             printf("[receiver]: sending reject: success\n"RESET);
         }
-        return -1;
+        return r;
     } else {
         printf("[receiver]: read message: %s\n"RESET, (char *) data);
     }
 
     if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, RR(!n)) < 0) {
         fprintf(stderr, RED"[receiver]: sending confirmation: error\n"RESET);
-        return -1;
     } else {
         printf("[receiver]: sending confirmation: success\n"RESET);
         n = !n;
-        return r;
     }
+    return r;
 }
 
 ssize_t ll_write(int fd, const void *data, size_t nb) {
