@@ -3,9 +3,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "include/link_layer.h"
+#include "../data_link_layer/include/link_layer.h"
 #include "include/aplication.h"
-#include "include/errnos.h"
+#include "../data_link_layer/include/errnos.h"
 
 int main(int argc, char **argv) {
     if (argc < 3 || argc > 4) {

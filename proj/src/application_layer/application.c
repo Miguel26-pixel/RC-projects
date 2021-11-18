@@ -9,8 +9,8 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-#include "include/errnos.h"
-#include "include/link_layer.h"
+#include "../data_link_layer/include/errnos.h"
+#include "../data_link_layer/include/link_layer.h"
 
 size_t get_file_size(char * file_path) {
     size_t fs;
