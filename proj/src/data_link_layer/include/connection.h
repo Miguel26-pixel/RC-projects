@@ -1,5 +1,5 @@
-#ifndef FEUP_RC_CONNECTION_H
-#define FEUP_RC_CONNECTION_H
+#ifndef  PROJ_SRC_DATA_LINK_LAYER_INCLUDE_CONNECTION_H_
+#define  PROJ_SRC_DATA_LINK_LAYER_INCLUDE_CONNECTION_H_
 
 #include <sys/types.h>
 #include <stdbool.h>
@@ -40,4 +40,4 @@ int calculateBCC(const unsigned char *data, unsigned char *bcc2, size_t size);
 ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no);
 ssize_t read_information(int fd, unsigned char *data, size_t size, bool no);
 
-#endif //FEUP_RC_CONNECTION_H
+#endif  // PROJ_SRC_DATA_LINK_LAYER_INCLUDE_CONNECTION_H_

@@ -1,9 +1,9 @@
-#ifndef FEUP_RC_SETUP_H
-#define FEUP_RC_SETUP_H
+#ifndef PROJ_SRC_DATA_LINK_LAYER_INCLUDE_PORT_H_
+#define PROJ_SRC_DATA_LINK_LAYER_INCLUDE_PORT_H_
 
 #include <termios.h>
 
 int open_serial_port(const char *path);
 int close_serial_port(int fd);
 
-#endif //FEUP_RC_SETUP_H
+#endif  // PROJ_SRC_DATA_LINK_LAYER_INCLUDE_PORT_H_
