@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "include/link_layer.h"
+#include "include/aplication.h"
 #include "include/errnos.h"
 
 int main(int argc, char **argv) {
@@ -17,7 +18,9 @@ int main(int argc, char **argv) {
     int fd = ll_open(argv[1], false);
     if (fd < 0) exit(-1);
 
-    char res[20][256];
+    read_control_package(fd);
+
+    /*char res[20][256];
     int i = 0;
     ssize_t r;
     while (true) {
@@ -32,6 +35,6 @@ int main(int argc, char **argv) {
     for (int j = 0; j < i; ++j) printf(" %s"RESET, res[j]);
     printf("\n"RESET);
 
-    if (ll_close(fd, false) < 0) exit(-1);
+    if (ll_close(fd, false) < 0) exit(-1);*/
     return 0;
 }

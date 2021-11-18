@@ -4,17 +4,27 @@
 #include <stdlib.h>
 
 #include "include/link_layer.h"
+#include "include/aplication.h"
 #include "include/errnos.h"
 
 int main(int argc, char **argv) {
-    if (argc < 2 || argc > 2) {
-        fprintf(stderr, RED"Usage:\temitter SerialPort\n\tex: emitter /dev/ttyS1\n"RESET);
+    if (argc < 3 || argc > 4) {
+        fprintf(stderr, RED"Usage:\temitter SerialPort FilePath [FileName]\n\tex: emitter /dev/ttyS1\n"RESET);
         exit(1);
     }
 
     printf(YELLOW"[emitter]: started: using serial port: %s\n"RESET, argv[1]);
 
     int fd = ll_open(argv[1], true);
+    if (fd < 0) exit(-1);
+
+    send_control_package(fd, argv[2], (argc == 4) ? argv[3] : NULL);
+
+    
+
+
+
+    /*int fd = ll_open(argv[1], true);
     if (fd < 0) exit(-1);
 
     const char *message[] = {
@@ -48,7 +58,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (ll_close(fd, true) < 0) exit(-1);
+    if (ll_close(fd, true) < 0) exit(-1);*/
 
     return 0;
 }
