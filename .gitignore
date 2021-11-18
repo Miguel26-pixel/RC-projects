@@ -1,5 +1,7 @@
 #
  /.vscode/
+ emitter
+ receiver
 
 # Prerequisites
 *.d

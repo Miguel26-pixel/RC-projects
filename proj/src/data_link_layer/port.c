@@ -1,27 +1,32 @@
-#include "include/setup.h"
+#include "include/port.h"
+#include "include/errnos.h"
+
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <string.h>
 
 #define BAUDRATE B38400
 
-extern int fd;
+static struct termios old_configuration;
 
-int open_serial_port(const char *path, struct termios *old_configuration) {
-    struct termios newtio;
-
-    fd = open(path, O_RDWR | O_NOCTTY);
-    if (fd < 0) {
-        perror(path);
-        exit(-1);
+int open_serial_port(const char *path) {
+    if(path == NULL) {
+        return NULL_POINTER_ERROR;
     }
 
-    if (tcgetattr(fd, old_configuration) == -1) {
+    struct termios newtio;
+    int fd = open(path, O_RDWR | O_NOCTTY);
+    if (fd < 0) {
+        perror(path);
+        return IO_ERROR;
+    }
+
+    if (tcgetattr(fd, &old_configuration) == -1) {
         perror("tcgetattr");
-        exit(-1);
+        close(fd);
+        return CONFIGURATION_ERROR;
     }
     memset(&newtio, 0, sizeof(newtio));
     newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
@@ -37,17 +42,18 @@ int open_serial_port(const char *path, struct termios *old_configuration) {
 
     if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
         perror("tcsetattr");
-        exit(-1);
+        close(fd);
+        return CONFIGURATION_ERROR;
     }
 
-    return 0;
+    return fd;
 }
 
-int close_serial_port(const struct termios *old_configuration) {
+int close_serial_port(int fd) {
     sleep(1);
-    if (tcsetattr(fd, TCSANOW, old_configuration) == -1) {
+    if (tcsetattr(fd, TCSANOW, &old_configuration) == -1) {
         perror("tcsetattr");
-        exit(-1);
+        return CONFIGURATION_ERROR;
     }
 
     return close(fd);

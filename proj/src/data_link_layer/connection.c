@@ -1,17 +1,17 @@
 #include "include/connection.h"
+#include "include/errnos.h"
 
 #include <sys/types.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
+#include <errno.h>
 
-#define MAX_ATTEMPTS 3
-#define TIMEOUT 3
+bool n = false;
 
-extern int fd;
-
-int read_supervision_message(unsigned char address, unsigned char control) {
+ssize_t read_supervision_message(int fd, unsigned char *address, unsigned char *control) {
+    if (address == NULL || control == NULL) return NULL_POINTER_ERROR;
 
     typedef enum {
         READ_START_FLAG, READ_ADDRESS, READ_CONTROL, READ_BCC, READ_END_FLAG
@@ -20,114 +20,223 @@ int read_supervision_message(unsigned char address, unsigned char control) {
     state_t s = READ_START_FLAG;
     unsigned char b;
     while (true) {
-        // COMBACK: Failures?
-        if (read(fd, &b, 1) < 0) return -1;
-        else alarm(0);
+        if (read(fd, &b, 1) < 0) {
+            if (errno == EINTR) return TIMED_OUT;
+            else return IO_ERROR;
+        } else {
+            alarm(0);
+        }
+
         if (s == READ_START_FLAG && b == FLAG) {
             s = READ_ADDRESS;
-        } else if (s == READ_ADDRESS && b == address) {
+        } else if (s == READ_ADDRESS) {
+            *address = b;
             s = READ_CONTROL;
-        } else if (s == READ_CONTROL && b == control) {
+        } else if (s == READ_CONTROL) {
+            *control = b;
             s = READ_BCC;
-        } else if (s == READ_BCC && b == (unsigned char) (address ^ control)) {
+        } else if (s == READ_BCC && b == (unsigned char) (*address ^ *control)) {
             s = READ_END_FLAG;
         } else if (s == READ_END_FLAG && b == FLAG) {
-            return 0;
+            return SUCCESS;
         } else {
             s = READ_START_FLAG;
         }
     }
 }
 
-ssize_t send_supervision_message(unsigned char address, unsigned char control) {
+ssize_t send_supervision_message(int fd, unsigned char address, unsigned char control) {
     unsigned char message[] = {FLAG, address, control, address ^ control, FLAG};
     return write(fd, message, sizeof(message));
 }
 
-int connect_to_receiver(void) {
-    int interrupt_count = 0;
-
-    while (interrupt_count < MAX_ATTEMPTS) {
-        send_supervision_message(ADDRESS_EMITTER_RECEIVER, SET);
-        printf("[connecting]: attempt: %d\n", interrupt_count);
+int connect_to_receiver(int fd) {
+    int i;
+    for (i = 1; i <= MAX_ATTEMPTS; ++i) {
+        send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, SET);
+        printf("[connecting]: attempt: %d\n", i);
         alarm(TIMEOUT);
-        if (read_supervision_message(ADDRESS_RECEIVER_EMITTER, UA) < 0) interrupt_count++;
-        else return 0;
+        unsigned char a, c;
+        // COMBACK: The state machine does not validate the address and the control. Think about a better way.
+        if (read_supervision_message(fd, &a, &c) >= 0 && a == ADDRESS_RECEIVER_EMITTER && c == UA) {
+            return SUCCESS;
+        }
+    }
+    return TOO_MANY_ATTEMPTS;
+}
+
+int connect_to_emitter(int fd) {
+    unsigned char a, c;
+    ssize_t r;
+    r = read_supervision_message(fd, &a, &c);
+    if (r < 0) return (int) r;
+    else if (a != ADDRESS_EMITTER_RECEIVER || c != SET) return INVALID_RESPONSE;
+
+    r = send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, UA);
+    if (r < 0) return (int) r;
+
+    return SUCCESS;
+}
+
+int disconnect_from_receiver(int fd) {
+    ssize_t r;
+    r = send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, DISC);
+    if (r < 0) return (int) r;
+
+    unsigned char a, c;
+    r = read_supervision_message(fd, &a, &c);
+    if (r < 0) return (int) r;
+    else if (a != ADDRESS_RECEIVER_EMITTER || c != DISC) return INVALID_RESPONSE;
+
+    r = send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, UA);
+    if (r < 0) return (int) r;
+
+    return SUCCESS;
+}
+
+int disconnect_from_emitter(int fd) {
+    ssize_t r;
+    r = send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, DISC);
+    if (r < 0) return (int) r;
+
+    unsigned char a, c;
+    r = read_supervision_message(fd, &a, &c);
+    if (r < 0) return (int) r;
+    else if (a != ADDRESS_EMITTER_RECEIVER || c != UA) return INVALID_RESPONSE;
+
+    return SUCCESS;
+}
+
+ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no) {
+    if (data == NULL) return NULL_POINTER_ERROR;
+
+    unsigned char header[] = {FLAG, ADDRESS_EMITTER_RECEIVER, CI(no),
+                              (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ CI(no))};
+
+    if (write(fd, header, sizeof(header)) < 0) return IO_ERROR;
+
+    size_t k;
+    unsigned char a[3];
+    ssize_t res = 0, v;
+    for (size_t i = 0; i < nb; ++i) {
+        k = 0;
+        if (data[i] == REP1) {
+            a[k++] = ESC11;
+            a[k++] = ESC12;
+        } else if (data[i] == REP2) {
+            a[k++] = ESC21;
+            a[k++] = ESC22;
+        } else {
+            a[k++] = data[i];
+        }
+        v = write(fd, a, k);
+        if (v < 0) {
+            if (errno == EINTR) return TIMED_OUT;
+            else return IO_ERROR;
+        }
+        res += v;
     }
 
-    return -1;
+    unsigned char bcc2;
+    calculateBCC(data, &bcc2, nb);
+
+    k = 0;
+    if (bcc2 == REP1) {
+        a[k++] = ESC11;
+        a[k++] = ESC12;
+    } else if (bcc2 == REP2) {
+        a[k++] = ESC21;
+        a[k++] = ESC22;
+    } else {
+        a[k++] = bcc2;
+    }
+    a[k++] = FLAG;
+    if (write(fd, a, k) < 0) {
+        if (errno == EINTR) return TIMED_OUT;
+        else return IO_ERROR;
+    }
+    return res;
 }
 
-int connect_to_writer(void) {
-    if (read_supervision_message(ADDRESS_EMITTER_RECEIVER, SET) < 0) return -1;
-    if (send_supervision_message(ADDRESS_RECEIVER_EMITTER, UA) < 0) return -1;
-    return 0;
+int calculateBCC(const unsigned char *data, unsigned char *bcc2, size_t size) {
+    if (data == NULL || bcc2 == NULL) return NULL_POINTER_ERROR;
+
+    *bcc2 = 0;
+    for (int j = 0; j < size; ++j) *bcc2 = (unsigned char) (*bcc2 ^ data[j]);
+    return SUCCESS;
 }
 
-int send_information(const unsigned char *data, size_t nb, bool n) {
-    unsigned char c = (unsigned char) (n << 6);
-    unsigned char header[] = {FLAG, ADDRESS_EMITTER_RECEIVER, c, (unsigned char) ADDRESS_EMITTER_RECEIVER ^ c};
+ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
+    if (data == NULL) return NULL_POINTER_ERROR;
 
-    if (write(fd, header, sizeof(header)) < 0) return -1;
-
-    if (write(fd, data, nb) < 0) return -1;
-
-    unsigned char bcc2 = 0;
-    for (int i = 0; i < nb; ++i) bcc2 = (unsigned char) (bcc2 ^ data[i]);
-
-    unsigned char footer[] = {bcc2, FLAG};
-    if (write(fd, footer, sizeof(footer)) < 0) return -1;
-
-    return 0;
-}
-
-int read_information(unsigned char *data, size_t size, bool n) {
     typedef enum {
-        READ_FLAG_START, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, READ_BCC2, READ_FLAG_END
+        READ_FLAG_START, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, READ_BCC2
     } state_t;
 
     state_t s = READ_FLAG_START;
 
     unsigned char b, c, bcc2;
-    unsigned char buf[256];
     unsigned int i = 0;
-    bool done = false;
     while (true) {
         //COMBACK: Better to reorganize the loop to avoid reading sometimes.
-        if (!done) {
-            if (read(fd, &b, 1) < 0) return -1;
-            else alarm(0);
+        if (s < READ_BCC2) {
+            if (read(fd, &b, 1) < 0) {
+                if (errno == EINTR) return TIMED_OUT;
+                else return IO_ERROR;
+            } else {
+                alarm(0);
+            }
         }
 
         if (s == READ_FLAG_START && b == FLAG) {
             s = READ_ADDRESS;
         } else if (s == READ_ADDRESS && b == ADDRESS_EMITTER_RECEIVER) {
             s = READ_CONTROL;
-            //COMBACK: Use n parameter to validate this field
-        } else if (s == READ_CONTROL && (b == CI(n))) {
+        } else if (s == READ_CONTROL && (b == CI(no) || b == CI(!no) || b == DISC)) {
             c = b;
             s = READ_BCC1;
         } else if (s == READ_BCC1 && b == (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ c)) {
-            s = READ_DATA;
-        } else if (s == READ_DATA) {
-            // COMBACK: Buffer overflow
-            data[i] = b;
-            ++i;
-            if (b == FLAG) {
-                done = true;
-                s = READ_BCC2;
-                // COMBACK: Most likely a function
-                bcc2 = 0;
-                for (int j = 0; j < i - 2; ++j) bcc2 = (unsigned char) (bcc2 ^ data[j]);
+            if (c == CI(no)) s = READ_DATA;
+            else if (c == DISC) {
+                if (read(fd, &b, 1) < 0) {
+                    if (errno == EINTR) return TIMED_OUT;
+                    else return IO_ERROR;
+                } else {
+                    return EOF_DISCONNECT;
+                }
             }
-            //COMBACK: Implement forgiving validation: if header is valid, send reject.
-        } else if (s == READ_BCC2 && data[i - 2] == bcc2) {
-            s = READ_FLAG_END;
-        } else if (s == READ_FLAG_END && data[i - 1] == FLAG) {
-            memcpy(buf, data, i - 2);
-            return 0;
+        } else if (s == READ_DATA) {
+            if (i > size) return BUFFER_OVERFLOW;
+
+            if (b == ESC11 || b == ESC21) {
+                char b2;
+                if (read(fd, &b2, 1) < 0) {
+                    if (errno == EINTR) return TIMED_OUT;
+                    else return IO_ERROR;
+                }
+                if (b == ESC11 && b2 == ESC12) {
+                    data[i++] = REP1;
+                } else if (b == ESC21 && b2 == ESC22) {
+                    data[i++] = REP2;
+                } else {
+                    data[i++] = b;
+                    data[i++] = b2;
+                }
+            } else {
+                data[i++] = b;
+            }
+
+            if (b == FLAG) s = READ_BCC2;
+        } else if (s == READ_BCC2) {
+            if (c == CI(!n)) return OUT_OF_ORDER;
+            calculateBCC(data, &bcc2, i - 2);
+            if (data[i - 2] == bcc2) break;
+            else return PARITY_ERROR;
         } else {
             s = READ_FLAG_START;
         }
     }
+
+    size_t ds = (i - 2) <= size ? i - 2 : size;
+    return (ssize_t) ds;
 }
