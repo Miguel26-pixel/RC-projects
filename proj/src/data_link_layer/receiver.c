@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
         memset(res[i], 0, sizeof(res[i]));
         r = ll_read(fd, res[i], sizeof(res[i]));
         if (r == EOF_DISCONNECT) break;
-        else if (r < 0) {}
+        else if (r < 0);
         else if (r >= 0) ++i;
     }
 

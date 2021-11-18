@@ -179,7 +179,7 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
     unsigned char b, c, bcc2;
     unsigned int i = 0;
     while (true) {
-        //COMBACK: Better to reorganize the loop to avoid reading sometimes.
+        // COMBACK: Better to reorganize the loop to avoid reading sometimes.
         if (s < READ_BCC2) {
             if (read(fd, &b, 1) < 0) {
                 if (errno == EINTR) return TIMED_OUT;
