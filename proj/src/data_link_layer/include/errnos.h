@@ -2,15 +2,15 @@
 #define FEUP_RC_ERRNOS_H
 
 #define SUCCESS 0
-#define NULL_POINTER_ERROR -100
-#define TOO_MANY_ATTEMPTS -99
-#define TIMED_OUT -98
-#define IO_ERROR -97
-#define INVALID_RESPONSE -96
-#define EOF_DISCONNECT -2
-#define BUFFER_OVERFLOW -94
-#define OUT_OF_ORDER -93
-#define PARITY_ERROR -92
-#define CONFIGURATION_ERROR -91
+#define NULL_POINTER_ERROR (-100)
+#define TOO_MANY_ATTEMPTS (-99)
+#define TIMED_OUT (-98)
+#define IO_ERROR (-97)
+#define INVALID_RESPONSE (-96)
+#define EOF_DISCONNECT (-2)
+#define BUFFER_OVERFLOW (-94)
+#define OUT_OF_ORDER (-93)
+#define PARITY_ERROR (-92)
+#define CONFIGURATION_ERROR (-91)
 
 #endif //FEUP_RC_ERRNOS_H
