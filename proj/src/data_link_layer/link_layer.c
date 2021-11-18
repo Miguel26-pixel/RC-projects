@@ -1,13 +1,15 @@
 #include "include/link_layer.h"
-#include "include/errnos.h"
+
 #include <stddef.h>
-#include "include/connection.h"
-#include "include/port.h"
 #include <stdio.h>
 #include <errno.h>
-#include "include/alarm.h"
 #include <string.h>
 #include <unistd.h>
+
+#include "include/connection.h"
+#include "include/port.h"
+#include "include/alarm.h"
+#include "include/errnos.h"
 
 extern bool n;
 

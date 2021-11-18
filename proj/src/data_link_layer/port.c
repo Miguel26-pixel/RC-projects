@@ -1,11 +1,12 @@
 #include "include/port.h"
-#include "include/errnos.h"
 
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+
+#include "include/errnos.h"
 
 #define BAUDRATE B38400
 
