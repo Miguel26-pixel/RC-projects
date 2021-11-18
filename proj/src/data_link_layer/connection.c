@@ -197,8 +197,9 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
             c = b;
             s = READ_BCC1;
         } else if (s == READ_BCC1 && b == (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ c)) {
-            if (c == CI(no)) s = READ_DATA;
-            else if (c == DISC) {
+            if (c == CI(no) || c == CI(!no)) {
+                s = READ_DATA;
+            } else if (c == DISC) {
                 if (read(fd, &b, 1) < 0) {
                     if (errno == EINTR) return TIMED_OUT;
                     else return IO_ERROR;
