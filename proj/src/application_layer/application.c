@@ -51,7 +51,7 @@ int send_control_package(int fd, char *file_path, char *file_name) {
 
     control_package = (unsigned char *) malloc(num_bytes);
 
-    bzero((void *) control_package, num_bytes);
+    memset((void *) control_package, 0, num_bytes);
 
     get_control_package(control_package, file_path, file_name);
 
@@ -69,8 +69,8 @@ int send_control_package(int fd, char *file_path, char *file_name) {
 
 int read_control_package(int fd) {
 
-    unsigned char res[20];
-    bzero(res, 20);
+    unsigned char res[32];
+    memset(res, 0, sizeof(res));
     ll_read(fd, res, sizeof(res));
 
     for (int i = 0; i < sizeof(res); i++) {
