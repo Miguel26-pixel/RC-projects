@@ -176,7 +176,7 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
     } state_t;
 
     state_t s = READ_FLAG_START;
-
+    bool ignore_data = false;
     unsigned char b, c, bcc2;
     unsigned int i = 0;
     while (true) {
@@ -192,20 +192,21 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
 
         if (s == READ_FLAG_START && b == FLAG) {
             s = READ_ADDRESS;
-        } else if (s == READ_ADDRESS && b == ADDRESS_EMITTER_RECEIVER) {
+        } else if (s == READ_ADDRESS) {
             s = READ_CONTROL;
-        } else if (s == READ_CONTROL && (b == CI(no) || b == CI(!no) || b == DISC)) {
+        } else if (s == READ_CONTROL) {
             c = b;
             s = READ_BCC1;
         } else if (s == READ_BCC1 && b == (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ c)) {
             if (c == CI(no) || c == CI(!no)) {
                 s = READ_DATA;
-            } else if (c == DISC) {
+            } else {
                 if (read(fd, &b, 1) < 0) {
                     if (errno == EINTR) return TIMED_OUT;
                     else return IO_ERROR;
                 } else {
-                    return EOF_DISCONNECT;
+                    if (c == DISC) return EOF_DISCONNECT;
+                    else s = READ_FLAG_START;
                 }
             }
         } else if (s == READ_DATA) {
