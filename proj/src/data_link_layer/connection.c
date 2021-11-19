@@ -239,6 +239,6 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
         }
     }
 
-    size_t ds = (i - 2) <= size ? i - 2 : size;
+    size_t ds = (i - 3) <= size ? i - 3 : size;
     return (ssize_t) ds;
 }
