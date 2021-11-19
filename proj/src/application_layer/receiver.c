@@ -68,6 +68,7 @@ int main(int argc, char **argv) {
                 }
             } else {
                 if (process_control_packet(packet, r, &end_packet, false) < 0) {
+                    exit(-1);
                 } else {
                     exit(-1);
                 }
@@ -84,7 +85,6 @@ int main(int argc, char **argv) {
 
     free(start_packet.file_name);
     free(end_packet.file_name);
-
 
     if (ll_close(fd, false) < 0) {
         exit(-1);

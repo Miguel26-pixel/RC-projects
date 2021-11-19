@@ -14,6 +14,7 @@
 #define BUFFER_SIZE 2048
 
 int main(int argc, char **argv) {
+    unsigned char no = 0;
     if (argc < 3 || argc > 4) {
         fprintf(stderr, RED"Usage:\temitter SerialPort FilePath [FileName]\n\tex: emitter /dev/ttyS1\n"RESET);
         exit(1);
@@ -39,15 +40,13 @@ int main(int argc, char **argv) {
     unsigned char buf[BUFFER_SIZE];
     size_t n;
 
-    {
-        n = assemble_control_packet(packet, true, pa, sizeof(pa));
-        if (n < 0) {
-            exit(-1);
-        }
+    n = assemble_control_packet(packet, true, pa, sizeof(pa));
+    if (n < 0) {
+        exit(-1);
+    }
 
-        if (ll_write(fd, pa, n) < 0) {
-            exit(-1);
-        }
+    if (ll_write(fd, pa, n) < 0) {
+        exit(-1);
     }
 
     size_t no_packets = packet.file_size / BUFFER_SIZE;

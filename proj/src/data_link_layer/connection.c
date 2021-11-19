@@ -176,7 +176,6 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
     } state_t;
 
     state_t s = READ_FLAG_START;
-    bool ignore_data = false;
     unsigned char b, c, bcc2;
     unsigned int i = 0;
     while (true) {
