@@ -64,14 +64,14 @@ int ll_close(int fd, bool is_emitter) {
         r = disconnect_from_emitter(fd);
     }
     if (r < 0) {
-        fprintf(stderr, RED"[%s]: disconnecting: error: %s"RESET, source, strerror(errno));
+        fprintf(stderr, RED"[%s]: disconnecting: error: %s\n"RESET, source, strerror(errno));
     } else {
         printf("[%s]: disconnecting: success\n"RESET, source);
     }
 
     r = close_serial_port(fd);
     if (r < 0) {
-        fprintf(stderr, RED"[%s]: closing serial port: error: %s"RESET, source, strerror(errno));
+        fprintf(stderr, RED"[%s]: closing serial port: error: %s\n"RESET, source, strerror(errno));
         return r;
     } else {
         printf("[%s]: closing serial port: success\n"RESET, source);

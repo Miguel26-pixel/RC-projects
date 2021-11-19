@@ -99,11 +99,12 @@ int disconnect_from_emitter(int fd) {
     ssize_t r;
     r = send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, DISC);
     if (r < 0) return (int) r;
-
     unsigned char a, c;
-    r = read_supervision_message(fd, &a, &c);
-    if (r < 0) return (int) r;
-    else if (a != ADDRESS_EMITTER_RECEIVER || c != UA) return INVALID_RESPONSE;
+    while (true) {
+        r = read_supervision_message(fd, &a, &c);
+        if (r < 0) return (int) r;
+        else if (a == ADDRESS_EMITTER_RECEIVER && c == UA) break;
+    }
 
     return SUCCESS;
 }
