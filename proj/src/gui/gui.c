@@ -29,6 +29,12 @@ const char *FOOTER2 = " │  │██│\n"
                       "│█████████████████████████████████████████│\n"
                       "└─────────────────────────────────────────┘\n";
 
+FILE *al_events;
+FILE *al_errors;
+FILE *ll_events;
+FILE *ll_errors;
+FILE *driver_events;
+FILE *driver_errors;
 
 void print_progress_bar(double p, const char *d, bool is_error) {
     const char *color = is_error ? RED : GREEN;

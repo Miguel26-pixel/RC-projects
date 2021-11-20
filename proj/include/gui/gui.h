@@ -6,7 +6,12 @@
 #include <stdio.h>
 #include <time.h>
 
-FILE *al_events, *al_errors, *ll_events, *ll_errors, *driver_events, *driver_errors;
+extern FILE *al_events;
+extern FILE *al_errors;
+extern FILE *ll_events;
+extern FILE *ll_errors;
+extern FILE *driver_events;
+extern FILE *driver_errors;
 
 #define LOG_AL_EVENT(...) \
     if (al_events != NULL) { \
