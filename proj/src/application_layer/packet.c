@@ -2,8 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include "../data_link_layer/include/errnos.h"
+#include "../errors/include/errnos.h"
 
 int process_control_packet(const unsigned char *bytes, size_t nb, control_packet_t *packet, bool is_start) {
     if ((is_start && bytes[0] != C_START) || (!is_start && bytes[0] != C_END)) return INVALID_RESPONSE;

@@ -7,4 +7,4 @@ writer: src/gui/gui.c src/data_link_layer/alarm.c src/data_link_layer/port.c src
 	gcc src/gui/gui.c src/application_layer/emitter.c src/application_layer/utils.c src/application_layer/packet.c src/data_link_layer/alarm.c src/data_link_layer/port.c src/data_link_layer/connection.c src/data_link_layer/link_layer.c -o emitter
 
 clean:
-	rm -rf receiver emitter
+	rm -rf receiver emitter *.log

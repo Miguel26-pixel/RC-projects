@@ -6,7 +6,8 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "include/errnos.h"
+#include "../errors/include/errnos.h"
+#include "../gui/include/gui.h"
 
 #define BAUDRATE B38400
 
@@ -16,17 +17,30 @@ int open_serial_port(const char *path) {
     if (path == NULL) return NULL_POINTER_ERROR;
 
     struct termios newtio;
+
+    LOG_DRIVER_EVENT("[driver]: opening serial port\n")
     int fd = open(path, O_RDWR | O_NOCTTY);
     if (fd < 0) {
-        perror(path);
+        LOG_DRIVER_ERROR("[driver]: opening serial port: error %s\n", strerror(errno));
         return IO_ERROR;
+    } else {
+        LOG_DRIVER_EVENT("[driver]: opened serial port\n")
     }
 
+    LOG_DRIVER_EVENT("[driver]: getting serial port configuration\n")
     if (tcgetattr(fd, &old_configuration) == -1) {
-        perror("tcgetattr");
-        close(fd);
+        LOG_DRIVER_ERROR("[driver]: getting serial port configuration: error %s\n", strerror(errno));
+        LOG_DRIVER_EVENT("[driver]: closing serial port\n")
+        if (close(fd) < 0) {
+            LOG_DRIVER_EVENT("[driver]: closing serial port: error: %s\n", strerror(errno))
+        } else {
+            LOG_DRIVER_EVENT("[driver]: closed serial port\n")
+        }
         return CONFIGURATION_ERROR;
+    } else {
+        LOG_DRIVER_EVENT("[driver]: got serial port configuration\n")
     }
+
     memset(&newtio, 0, sizeof(newtio));
     newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
     newtio.c_iflag = IGNPAR;
@@ -39,21 +53,41 @@ int open_serial_port(const char *path) {
 
     tcflush(fd, TCIOFLUSH);
 
+    LOG_DRIVER_EVENT("[driver]: configuring serial port\n")
     if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
-        perror("tcsetattr");
-        close(fd);
+        LOG_DRIVER_ERROR("[driver]: configuring serial port: error: %s\n", strerror(errno));
+        LOG_DRIVER_EVENT("[driver]: closing serial port\n")
+        if (close(fd) < 0) {
+            LOG_DRIVER_EVENT("[driver]: closed serial port: error: %s\n", strerror(errno))
+        } else {
+            LOG_DRIVER_EVENT("[driver]: closed serial port\n")
+        }
         return CONFIGURATION_ERROR;
+    } else {
+        LOG_DRIVER_EVENT("[driver]: configured serial port\n")
     }
 
     return fd;
 }
 
 int close_serial_port(int fd) {
+    int ret = SUCCESS;
     sleep(1);
+    LOG_DRIVER_EVENT("[driver]: restoring serial port configuration\n")
     if (tcsetattr(fd, TCSANOW, &old_configuration) == -1) {
-        perror("tcsetattr");
-        return CONFIGURATION_ERROR;
+        LOG_DRIVER_ERROR("[driver]: restoring serial port configuration: error: %s\n", strerror(errno));
+        ret = CONFIGURATION_ERROR;
+    } else {
+        LOG_DRIVER_EVENT("[driver]: restored serial port configuration\n")
     }
 
-    return close(fd);
+    LOG_DRIVER_EVENT("[driver]: closing serial port\n")
+    if (close(fd) < 0) {
+        LOG_DRIVER_EVENT("[driver]: closed serial port: error: %s\n", strerror(errno))
+        if (ret == SUCCESS) ret = IO_ERROR;
+    } else {
+        LOG_DRIVER_EVENT("[driver]: closed serial port\n")
+    }
+
+    return ret;
 }
