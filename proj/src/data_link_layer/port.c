@@ -1,4 +1,4 @@
-#include "include/port.h"
+#include "../../include/data_link_layer/port.h"
 
 #include <fcntl.h>
 #include <termios.h>
@@ -6,8 +6,8 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "../errors/include/errnos.h"
-#include "../gui/include/gui.h"
+#include "../../include/errors/errnos.h"
+#include "../../include/gui/gui.h"
 
 #define BAUDRATE B38400
 

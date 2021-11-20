@@ -1,4 +1,4 @@
-#include "include/connection.h"
+#include "../../include/data_link_layer/connection.h"
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -7,7 +7,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "../errors/include/errnos.h"
+#include "../../include/errors/errnos.h"
 
 bool n = false;
 

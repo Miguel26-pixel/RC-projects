@@ -4,10 +4,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "../data_link_layer/include/link_layer.h"
-#include "include/packet.h"
-#include "include/utils.h"
-#include "../gui/include/gui.h"
+#include "../../../include/data_link_layer/link_layer.h"
+#include "../../../include/application_layer/packet.h"
+#include "../../../include/application_layer/utils.h"
+#include "../../../include/gui/gui.h"
 
 #define PACKET_SIZE 5192
 #define BUFFER_SIZE 2048

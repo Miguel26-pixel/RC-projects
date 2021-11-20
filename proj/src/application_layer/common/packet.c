@@ -1,8 +1,8 @@
-#include "include/packet.h"
+#include "../../../include/application_layer/packet.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "../errors/include/errnos.h"
+#include "../../../include/errors/errnos.h"
 
 int process_control_packet(const unsigned char *bytes, size_t nb, control_packet_t *packet, bool is_start) {
     if ((is_start && bytes[0] != C_START) || (!is_start && bytes[0] != C_END)) return INVALID_RESPONSE;

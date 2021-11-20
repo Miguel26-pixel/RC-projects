@@ -6,10 +6,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "../data_link_layer/include/link_layer.h"
-#include "../errors/include/errnos.h"
-#include "include/packet.h"
-#include "../gui/include/gui.h"
+#include "../../../include/data_link_layer/link_layer.h"
+#include "../../../include/errors/errnos.h"
+#include "../../../include/application_layer/packet.h"
+#include "../../../include/gui/gui.h"
 
 
 int main(int argc, char **argv) {

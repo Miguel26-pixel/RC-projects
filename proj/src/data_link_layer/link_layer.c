@@ -1,4 +1,4 @@
-#include "include/link_layer.h"
+#include "../../include/data_link_layer/link_layer.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -6,11 +6,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "include/connection.h"
-#include "include/port.h"
-#include "include/alarm.h"
-#include "../errors/include/errnos.h"
-#include "../gui/include/gui.h"
+#include "../../include/data_link_layer/connection.h"
+#include "../../include/data_link_layer/port.h"
+#include "../../include/data_link_layer/alarm.h"
+#include "../../include/errors/errnos.h"
+#include "../../include/gui/gui.h"
 
 extern bool n;
 
