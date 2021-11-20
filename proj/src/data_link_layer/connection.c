@@ -1,4 +1,4 @@
-#include "include/connection.h"
+#include "../../include/data_link_layer/connection.h"
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -7,7 +7,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "include/errnos.h"
+#include "../../include/errors/errnos.h"
 
 bool n = false;
 
@@ -55,7 +55,7 @@ int connect_to_receiver(int fd) {
     int i;
     for (i = 1; i <= MAX_ATTEMPTS; ++i) {
         send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, SET);
-        printf("[connecting]: attempt: %d\n", i);
+        // printf("[connecting]: attempt: %d\n", i);
         alarm(TIMEOUT);
         unsigned char a, c;
         // COMBACK: The state machine does not validate the address and the control. Think about a better way.
@@ -99,11 +99,12 @@ int disconnect_from_emitter(int fd) {
     ssize_t r;
     r = send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, DISC);
     if (r < 0) return (int) r;
-
     unsigned char a, c;
-    r = read_supervision_message(fd, &a, &c);
-    if (r < 0) return (int) r;
-    else if (a != ADDRESS_EMITTER_RECEIVER || c != UA) return INVALID_RESPONSE;
+    while (true) {
+        r = read_supervision_message(fd, &a, &c);
+        if (r < 0) return (int) r;
+        else if (a == ADDRESS_EMITTER_RECEIVER && c == UA) break;
+    }
 
     return SUCCESS;
 }
@@ -175,7 +176,6 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
     } state_t;
 
     state_t s = READ_FLAG_START;
-
     unsigned char b, c, bcc2;
     unsigned int i = 0;
     while (true) {
@@ -191,20 +191,21 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
 
         if (s == READ_FLAG_START && b == FLAG) {
             s = READ_ADDRESS;
-        } else if (s == READ_ADDRESS && b == ADDRESS_EMITTER_RECEIVER) {
+        } else if (s == READ_ADDRESS) {
             s = READ_CONTROL;
-        } else if (s == READ_CONTROL && (b == CI(no) || b == CI(!no) || b == DISC)) {
+        } else if (s == READ_CONTROL) {
             c = b;
             s = READ_BCC1;
         } else if (s == READ_BCC1 && b == (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ c)) {
             if (c == CI(no) || c == CI(!no)) {
                 s = READ_DATA;
-            } else if (c == DISC) {
+            } else {
                 if (read(fd, &b, 1) < 0) {
                     if (errno == EINTR) return TIMED_OUT;
                     else return IO_ERROR;
                 } else {
-                    return EOF_DISCONNECT;
+                    if (c == DISC) return EOF_DISCONNECT;
+                    else s = READ_FLAG_START;
                 }
             }
         } else if (s == READ_DATA) {
@@ -239,6 +240,6 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
         }
     }
 
-    size_t ds = (i - 2) <= size ? i - 2 : size;
+    size_t ds = (i - 3) <= size ? i - 3 : size;
     return (ssize_t) ds;
 }
