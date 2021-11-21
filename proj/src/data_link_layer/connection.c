@@ -23,7 +23,7 @@ ssize_t read_supervision_message(int fd, unsigned char *address, unsigned char *
     while (true) {
         if (read(fd, &b, 1) < 0) {
             if (errno == EINTR) return TIMED_OUT;
-            else return IO_ERROR;
+            else continue;
         } else {
             alarm(0);
         }
@@ -183,7 +183,7 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
         if (s < READ_BCC2) {
             if (read(fd, &b, 1) < 0) {
                 if (errno == EINTR) return TIMED_OUT;
-                else return IO_ERROR;
+                else continue;
             } else {
                 alarm(0);
             }
