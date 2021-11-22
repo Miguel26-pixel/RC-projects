@@ -21,7 +21,7 @@ int open_serial_port(const char *path) {
     LOG_DRIVER_EVENT("[driver]: opening serial port\n")
     int fd = open(path, O_RDWR | O_NOCTTY);
     if (fd < 0) {
-        LOG_DRIVER_ERROR("[driver]: opening serial port: error %s\n", strerror(errno));
+        LOG_DRIVER_ERROR("[driver]: opening serial port: error %s\n", strerror(errno))
         return IO_ERROR;
     } else {
         LOG_DRIVER_EVENT("[driver]: opened serial port\n")
@@ -29,7 +29,7 @@ int open_serial_port(const char *path) {
 
     LOG_DRIVER_EVENT("[driver]: getting serial port configuration\n")
     if (tcgetattr(fd, &old_configuration) == -1) {
-        LOG_DRIVER_ERROR("[driver]: getting serial port configuration: error %s\n", strerror(errno));
+        LOG_DRIVER_ERROR("[driver]: getting serial port configuration: error %s\n", strerror(errno))
         LOG_DRIVER_EVENT("[driver]: closing serial port\n")
         if (close(fd) < 0) {
             LOG_DRIVER_EVENT("[driver]: closing serial port: error: %s\n", strerror(errno))
@@ -55,7 +55,7 @@ int open_serial_port(const char *path) {
 
     LOG_DRIVER_EVENT("[driver]: configuring serial port\n")
     if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
-        LOG_DRIVER_ERROR("[driver]: configuring serial port: error: %s\n", strerror(errno));
+        LOG_DRIVER_ERROR("[driver]: configuring serial port: error: %s\n", strerror(errno))
         LOG_DRIVER_EVENT("[driver]: closing serial port\n")
         if (close(fd) < 0) {
             LOG_DRIVER_EVENT("[driver]: closed serial port: error: %s\n", strerror(errno))
@@ -75,7 +75,7 @@ int close_serial_port(int fd) {
     sleep(1);
     LOG_DRIVER_EVENT("[driver]: restoring serial port configuration\n")
     if (tcsetattr(fd, TCSANOW, &old_configuration) == -1) {
-        LOG_DRIVER_ERROR("[driver]: restoring serial port configuration: error: %s\n", strerror(errno));
+        LOG_DRIVER_ERROR("[driver]: restoring serial port configuration: error: %s\n", strerror(errno))
         ret = CONFIGURATION_ERROR;
     } else {
         LOG_DRIVER_EVENT("[driver]: restored serial port configuration\n")

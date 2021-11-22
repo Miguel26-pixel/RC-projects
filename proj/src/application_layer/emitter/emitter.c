@@ -21,29 +21,29 @@ int main(int argc, char **argv) {
 
     init_al_logs();
 
-    LOG_AL_EVENT("[emitter]: started: using serial port: %s\n", argv[1]);
+    LOG_AL_EVENT("[emitter]: started: using serial port: %s\n", argv[1])
 
-    LOG_AL_EVENT("[emitter]: checking input file\n");
+    LOG_AL_EVENT("[emitter]: checking input file\n")
     print_progress_bar(0, "CHECKING INPUT FILE", false);
     int fd2 = open(argv[2], O_RDONLY);
     if (fd2 < 0) {
-        LOG_AL_ERROR("[emitter]: checking input file: error\n");
+        LOG_AL_ERROR("[emitter]: checking input file: error\n")
         print_progress_bar(0, "INPUT FILE NOT OK", true);
         exit(-1);
     } else {
-        LOG_AL_EVENT("[emitter]: input file ok\n");
+        LOG_AL_EVENT("[emitter]: input file ok\n")
         print_progress_bar(0, "INPUT FILE OK", false);
     }
 
-    LOG_AL_EVENT("[emitter]: establishing connection\n");
+    LOG_AL_EVENT("[emitter]: establishing connection\n")
     print_progress_bar(0, "ESTABLISHING CONNECTION", false);
     int fd = ll_open(argv[1], true);
     if (fd < 0) {
-        LOG_AL_ERROR("[emitter]: establishing connection: error\n");
+        LOG_AL_ERROR("[emitter]: establishing connection: error\n")
         print_progress_bar(0, "CONNECTION NOT ESTABLISHED", true);
         exit(-1);
     } else {
-        LOG_AL_EVENT("[emitter]: connection established\n");
+        LOG_AL_EVENT("[emitter]: connection established\n")
         print_progress_bar(0, "CONNECTION ESTABLISHED", false);
     }
 
@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
     unsigned char buf[BUFFER_SIZE];
     size_t n;
 
-    LOG_AL_EVENT("[emitter]: sending file info\n");
+    LOG_AL_EVENT("[emitter]: sending file info\n")
     print_progress_bar(0, "SENDING FILE INFO", false);
     n = assemble_control_packet(packet, true, pa, sizeof(pa));
     if (n < 0 || ll_write(fd, pa, n) < 0) {
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
         print_progress_bar(0, "ERROR SENDING FILE INFO", true);
         exit(-1);
     } else {
-        LOG_AL_EVENT("[emitter]: sent file info\n");
+        LOG_AL_EVENT("[emitter]: sent file info\n")
         print_progress_bar(0, "SENT FILE INFO", false);
     }
 
@@ -74,42 +74,42 @@ int main(int argc, char **argv) {
         n = read(fd2, buf, sizeof(buf));
         if (n <= 0) {
             print_progress_bar(0, "ERROR READING FROM FILE", true);
-            LOG_AL_ERROR("[emitter]: reading from file: error\n");
+            LOG_AL_ERROR("[emitter]: reading from file: error\n")
             exit(-1);
         } else {
-            LOG_AL_EVENT("[emitter]: read %zu bytes from file\n", n);
+            LOG_AL_EVENT("[emitter]: read %zu bytes from file\n", n)
         }
 
         n = assemble_data_packet(buf, n, pa, sizeof(pa), i % 256);
         if (n < 0 || ll_write(fd, pa, n) < 0) {
-            LOG_AL_ERROR("[emitter]: sending data packet\n");
+            LOG_AL_ERROR("[emitter]: sending data packet\n")
             print_progress_bar(0, "ERROR SENDING", true);
             exit(-1);
         } else {
-            LOG_AL_EVENT("[emitter]: sent packet %zu/%zu\n", i, no_packets);
+            LOG_AL_EVENT("[emitter]: sent packet %zu/%zu\n", i, no_packets)
             print_progress_bar(((double) i / no_packets), "SENDING", false);
         }
     }
 
-    LOG_AL_EVENT("[emitter]: assembling end control packet\n");
+    LOG_AL_EVENT("[emitter]: assembling end control packet\n")
     n = assemble_control_packet(packet, false, pa, sizeof(pa));
     if (n < 0 || ll_write(fd, pa, n) < 0) {
-        LOG_AL_ERROR("[emitter]: sending end control packet: error\n");
+        LOG_AL_ERROR("[emitter]: sending end control packet: error\n")
         print_progress_bar(0, "ERROR SENDING", true);
         exit(-1);
     } else {
-        LOG_AL_EVENT("[emitter]: sent end control packet\n");
+        LOG_AL_EVENT("[emitter]: sent end control packet\n")
         print_progress_bar(1, "SENT", false);
     }
 
-    LOG_AL_EVENT("[emitter]: disconnecting\n");
+    LOG_AL_EVENT("[emitter]: disconnecting\n")
     print_progress_bar(1, "TERMINATING", false);
     if (ll_close(fd, true) < 0) {
-        LOG_AL_ERROR("[emitter]: disconnecting: error\n");
+        LOG_AL_ERROR("[emitter]: disconnecting: error\n")
         print_progress_bar(1, "ERROR TERMINATING", false);
         exit(-1);
     } else {
-        LOG_AL_EVENT("[emitter]: disconnected\n");
+        LOG_AL_EVENT("[emitter]: disconnected\n")
         print_progress_bar(1, "TERMINATED", false);
     }
 

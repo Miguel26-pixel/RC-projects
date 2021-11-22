@@ -1,7 +1,6 @@
 #include "../../include/data_link_layer/connection.h"
 
 #include <sys/types.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
