@@ -1,7 +1,7 @@
 #include "../../include/gui/gui.h"
 #include <stdio.h>
 #include <string.h>
-#include "../../include/errors/errnos.h"
+#include "../../include/errors/error_nos.h"
 
 #define MAX_CHARS_PERCENTAGE 27
 #define MAX_CHARS_DESCRIPTION 35

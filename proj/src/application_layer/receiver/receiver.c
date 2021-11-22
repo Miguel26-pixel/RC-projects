@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #include "../../../include/data_link_layer/link_layer.h"
-#include "../../../include/errors/errnos.h"
+#include "../../../include/errors/error_nos.h"
 #include "../../../include/application_layer/packet.h"
 #include "../../../include/gui/gui.h"
 

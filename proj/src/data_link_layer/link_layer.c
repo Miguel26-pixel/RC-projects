@@ -9,7 +9,7 @@
 #include "../../include/data_link_layer/connection.h"
 #include "../../include/data_link_layer/port.h"
 #include "../../include/data_link_layer/alarm.h"
-#include "../../include/errors/errnos.h"
+#include "../../include/errors/error_nos.h"
 #include "../../include/gui/gui.h"
 
 extern bool n;

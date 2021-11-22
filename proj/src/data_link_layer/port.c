@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "../../include/errors/errnos.h"
+#include "../../include/errors/error_nos.h"
 #include "../../include/gui/gui.h"
 
 #define BAUDRATE B38400

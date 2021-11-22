@@ -6,7 +6,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "../../include/errors/errnos.h"
+#include "../../include/errors/error_nos.h"
 
 bool n = false;
 
