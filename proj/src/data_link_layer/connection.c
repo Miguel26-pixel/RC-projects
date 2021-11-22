@@ -7,6 +7,7 @@
 #include <errno.h>
 
 #include "../../include/errors/error_nos.h"
+#include "../../include/gui/gui.h"
 
 bool n = false;
 
@@ -54,7 +55,7 @@ int connect_to_receiver(int fd) {
     int i;
     for (i = 1; i <= MAX_ATTEMPTS; ++i) {
         send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, SET);
-        // printf("[connecting]: attempt: %d\n", i);
+        LOG_LL_EVENT("[connecting]: attempt: %d\n", i)
         alarm(TIMEOUT);
         unsigned char a, c;
         // COMBACK: The state machine does not validate the address and the control. Think about a better way.
