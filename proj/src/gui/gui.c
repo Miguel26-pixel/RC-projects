@@ -1,14 +1,10 @@
 #include "../../include/gui/gui.h"
 #include <stdio.h>
 #include <string.h>
-#include "../../include/errors/errnos.h"
+#include "../../include/errors/error_nos.h"
 
 #define MAX_CHARS_PERCENTAGE 27
 #define MAX_CHARS_DESCRIPTION 35
-#define GREEN "\x1b[1;32m"
-#define RED "\x1b[1;31m"
-#define RESET "\x1b[1;0m"
-#define CLEAR_SCREEN "\033c"
 
 const char *HEADER1 = "┌─────────────────────────────────────────┐\n"
                       "│█████████████████████████████████████████│\n"

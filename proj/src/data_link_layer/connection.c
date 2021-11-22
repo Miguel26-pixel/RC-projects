@@ -1,13 +1,13 @@
 #include "../../include/data_link_layer/connection.h"
 
 #include <sys/types.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 
-#include "../../include/errors/errnos.h"
+#include "../../include/errors/error_nos.h"
+#include "../../include/gui/gui.h"
 
 bool n = false;
 
@@ -23,7 +23,7 @@ ssize_t read_supervision_message(int fd, unsigned char *address, unsigned char *
     while (true) {
         if (read(fd, &b, 1) < 0) {
             if (errno == EINTR) return TIMED_OUT;
-            else return IO_ERROR;
+            else continue;
         } else {
             alarm(0);
         }
@@ -55,7 +55,7 @@ int connect_to_receiver(int fd) {
     int i;
     for (i = 1; i <= MAX_ATTEMPTS; ++i) {
         send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, SET);
-        // printf("[connecting]: attempt: %d\n", i);
+        LOG_LL_EVENT("[connecting]: attempt: %d\n", i)
         alarm(TIMEOUT);
         unsigned char a, c;
         // COMBACK: The state machine does not validate the address and the control. Think about a better way.
@@ -183,7 +183,7 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
         if (s < READ_BCC2) {
             if (read(fd, &b, 1) < 0) {
                 if (errno == EINTR) return TIMED_OUT;
-                else return IO_ERROR;
+                else continue;
             } else {
                 alarm(0);
             }
