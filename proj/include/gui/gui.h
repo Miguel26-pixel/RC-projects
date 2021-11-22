@@ -13,6 +13,12 @@ extern FILE *ll_errors;
 extern FILE *driver_events;
 extern FILE *driver_errors;
 
+#define RED "\x1b[1;31m"
+#define YELLOW "\x1b[1;33m"
+#define GREEN "\x1b[1;32m"
+#define RESET "\x1b[1;0m"
+#define CLEAR_SCREEN "\033c"
+
 #define LOG_AL_EVENT(...) \
     if (al_events != NULL) { \
         fprintf(al_events, "%ld;", time(0)); fprintf(al_events, __VA_ARGS__); \
