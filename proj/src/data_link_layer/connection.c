@@ -176,9 +176,10 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
     } state_t;
 
     state_t s = READ_FLAG_START;
-    unsigned char b, c, bcc2;
+    unsigned char a, b, c, bcc2;
     unsigned int i = 0;
     while (true) {
+
         // COMBACK: Better to reorganize the loop to avoid reading sometimes.
         if (s < READ_BCC2) {
             if (read(fd, &b, 1) < 0) {
@@ -189,14 +190,17 @@ ssize_t read_information(int fd, unsigned char *data, size_t size, bool no) {
             }
         }
 
+        
+
         if (s == READ_FLAG_START && b == FLAG) {
             s = READ_ADDRESS;
-        } else if (s == READ_ADDRESS) {
+        } else if (s == READ_ADDRESS && b == ADDRESS_EMITTER_RECEIVER	) {
+            a = b;
             s = READ_CONTROL;
         } else if (s == READ_CONTROL) {
             c = b;
             s = READ_BCC1;
-        } else if (s == READ_BCC1 && b == (unsigned char) (ADDRESS_EMITTER_RECEIVER ^ c)) {
+        } else if (s == READ_BCC1 &&(1|| b == (unsigned char) (a ^ c))) {      
             if (c == CI(no) || c == CI(!no)) {
                 s = READ_DATA;
             } else {

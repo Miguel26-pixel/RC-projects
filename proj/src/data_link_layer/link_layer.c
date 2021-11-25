@@ -91,19 +91,21 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
     ssize_t r;
     while (out_of_order) {
         LOG_LL_EVENT("[receiver]: reading message (R = %d)\n", n)
-
         r = read_information(fd, data, nb, n);
         if (r == EOF_DISCONNECT) {
             LOG_LL_EVENT("[receiver]: received disconnect\n")
             return EOF_DISCONNECT;
         } else if (r == OUT_OF_ORDER) {
             n = !n;
+            continue;
         } else if (r < 0) {
             LOG_LL_ERROR("[receiver]: reading message: error\n")
             if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0) {
+                
                 LOG_LL_ERROR("[receiver]: sending confirmation: error\n")
             } else {
                 LOG_LL_EVENT("[receiver]: sending reject: success\n")
+                continue;
             }
             return r;
         } else {

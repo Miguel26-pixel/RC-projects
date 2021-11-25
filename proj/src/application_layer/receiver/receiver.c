@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
             break;
         } else if (r < 0) {
             LOG_AL_ERROR("[receiver]: error reading\n")
-            exit(6);
+            continue;
         } else if (r >= 0) {
             if (packet[0] == C_DATA) {
                 LOG_AL_EVENT("[receiver]: processing data packet\n")
