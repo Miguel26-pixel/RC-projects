@@ -89,19 +89,21 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
     if (data == NULL) return NULL_POINTER_ERROR;
     bool out_of_order = true;
     ssize_t r;
+
+    unsigned char bytes[BUF_SIZE];
+
     while (out_of_order) {
         LOG_LL_EVENT("[receiver]: reading message (R = %d)\n", n)
-        r = read_information(fd, data, nb, n);
+        if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) { puts("FRAME"); return r;}
+        r = information_message(bytes, r, data, nb);
         if (r == EOF_DISCONNECT) {
             LOG_LL_EVENT("[receiver]: received disconnect\n")
             return EOF_DISCONNECT;
         } else if (r == OUT_OF_ORDER) {
             n = !n;
-            continue;
         } else if (r < 0) {
             LOG_LL_ERROR("[receiver]: reading message: error\n")
             if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0) {
-                
                 LOG_LL_ERROR("[receiver]: sending confirmation: error\n")
             } else {
                 LOG_LL_EVENT("[receiver]: sending reject: success\n")
@@ -125,6 +127,7 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
 
 ssize_t ll_write(int fd, const void *data, size_t nb) {
     if (data == NULL) return NULL_POINTER_ERROR;
+    unsigned char bytes[BUF_SIZE];
 
     int tries = 1;
     while (tries <= MAX_ATTEMPTS) {
@@ -143,8 +146,10 @@ ssize_t ll_write(int fd, const void *data, size_t nb) {
         alarm(TIMEOUT);
 
         unsigned char a, c;
-        if (read_supervision_message(fd, &a, &c) < 0 || a != ADDRESS_RECEIVER_EMITTER) {
-            ++tries;
+        ssize_t r;
+        if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) continue;
+        else ++tries;
+        if (supervision_message(bytes, &a, &c, sizeof(bytes)) < 0 || a != ADDRESS_RECEIVER_EMITTER) {
             LOG_LL_ERROR("[emitter]: reading confirmation: error\n")
         } else {
             alarm(0);
