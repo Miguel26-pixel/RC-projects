@@ -11,8 +11,8 @@
 #define T_FILE_SIZE 0
 #define T_FILE_NAME 1
 
-#define PACKET_SIZE 5192
-#define BUFFER_SIZE 2048
+#define PACKET_SIZE 2048
+#define BUFFER_SIZE 1024
 
 typedef struct {
     char *file_name;

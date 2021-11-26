@@ -9,8 +9,6 @@
 #include "../../../include/application_layer/utils.h"
 #include "../../../include/gui/gui.h"
 
-#define PACKET_SIZE 5192
-#define BUFFER_SIZE 2048
 
 int main(int argc, char **argv) {
     srand(time(NULL));

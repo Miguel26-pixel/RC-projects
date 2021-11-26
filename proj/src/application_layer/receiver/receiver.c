@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
             LOG_AL_EVENT("[receiver]: got last packet\n")
             break;
         } else if (r < 0) {
-            LOG_AL_ERROR("[receiver]: error reading\n")
+            LOG_AL_ERROR("[receiver]: error reading %zd\n", r)
             continue;
         } else if (r >= 0) {
             if (packet[0] == C_DATA) {

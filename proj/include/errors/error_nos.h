@@ -10,8 +10,9 @@
 #define INVALID_RESPONSE (-6)
 #define BUFFER_OVERFLOW (-7)
 #define OUT_OF_ORDER (-8)
-#define PARITY_ERROR (-9)
-#define CONFIGURATION_ERROR (-10)
-#define WRONG_HEADER (-11)
+#define PARITY_ERROR_1 (-9)
+#define PARITY_ERROR_2 (-10)
+#define CONFIGURATION_ERROR (-11)
+#define WRONG_HEADER (-12)
 
 #endif  // PROJ_SRC_DATA_LINK_LAYER_INCLUDE_ERROR_NOS_H_

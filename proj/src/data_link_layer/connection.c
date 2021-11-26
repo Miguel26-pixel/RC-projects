@@ -26,7 +26,7 @@ size_t unstuff_bytes(const unsigned char *bytes, size_t nb, unsigned char *dest,
         } else {
             dest[j] = bytes[i];
         }
-        if (rand() % 10000 < BIT_FLIP_RATE) dest[j] = rand() % 256;
+        if (rand() % 10000 < BIT_FLIP_RATE) dest[j] = (-1);
         ++j;
     }
     return j;
@@ -45,7 +45,7 @@ size_t stuff_bytes(const unsigned char *bytes, size_t nb, unsigned char *dest, s
         } else {
             dest[j++] = bytes[i];
         }
-        if (rand() % 10000 < BIT_FLIP_RATE) dest[j - 1] = rand() % 256;
+        if (rand() % 10000 < BIT_FLIP_RATE) dest[j - 1] = (-1);
     }
     return j;
 }
@@ -62,12 +62,10 @@ ssize_t read_frame(int fd, unsigned char *dest, size_t nbd) {
             alarm(0);
         }
 
-        if (rand() % 10000 < BIT_FLIP_RATE) bytes[i] = rand() % 256;
-
         if (bytes[i] == FLAG) {
             if (bytes[i - 1] == FLAG) { continue; }
             else if (i != 0) { stop = true; }
-        }
+        } else if (rand() % 10000 < BIT_FLIP_RATE) bytes[i] = (-1);
 
         ++i;
     }
@@ -97,11 +95,8 @@ ssize_t supervision_message(const unsigned char *m, unsigned char *a, unsigned c
             *c = m[i];
             s = READ_BCC;
         } else if (s == READ_BCC) {
-            if (m[i] == (unsigned char) (*a ^ *c)) {
-                s = READ_END_FLAG;
-            } else {
-                return PARITY_ERROR;
-            }
+            if (m[i] == (unsigned char) (*a ^ *c)) { s = READ_END_FLAG; }
+            else { return PARITY_ERROR_1; }
         } else if (s == READ_END_FLAG && m[i] == FLAG) {
             return SUCCESS;
         } else {
@@ -132,8 +127,8 @@ ssize_t information_message(const unsigned char *m, size_t nb, unsigned char *d,
             if (c == DISC) return EOF_DISCONNECT;
             s = READ_BCC1;
         } else if (s == READ_BCC1) {
-            if (m[i] == (unsigned char) (a ^ c)) s = CHECK_CONTROL;
-            else return PARITY_ERROR;
+            if (m[i] == (unsigned char) (a ^ c)) { s = CHECK_CONTROL; }
+            else { return PARITY_ERROR_1; }
         } else if (s == CHECK_CONTROL) {
             if (c == DISC) return EOF_DISCONNECT;
             else if (c == CI(!n)) return OUT_OF_ORDER;
@@ -151,8 +146,8 @@ ssize_t information_message(const unsigned char *m, size_t nb, unsigned char *d,
         } else if (s == READ_BCC2) {
             unsigned char bcc2;
             calculateBCC(d, &bcc2, j);
-            if (m[i] == bcc2) s = READ_END_FLAG;
-            else return PARITY_ERROR;
+            if (m[i] == bcc2) { s = READ_END_FLAG; }
+            else { return PARITY_ERROR_2; }
         } else if (s == READ_END_FLAG && m[i] == FLAG) {
             return j;
         } else {
@@ -171,6 +166,7 @@ int connect_to_receiver(int fd) {
     int i;
     unsigned char bytes[BUF_SIZE];
     for (i = 1; i <= MAX_ATTEMPTS; ++i) {
+        alarm(0);
         for (int j = 0; j < NUMBER_OF_REPEAT_SETS; ++j) {
             send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, SET);
         }

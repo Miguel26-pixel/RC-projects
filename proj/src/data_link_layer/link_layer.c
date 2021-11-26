@@ -104,9 +104,10 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
         } else if (r == WRONG_HEADER) {
             continue;
         } else if (r < 0) {
-            LOG_LL_ERROR("[receiver]: reading message: error\n")
-            if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0) {
-                LOG_LL_ERROR("[receiver]: sending confirmation: error\n")
+            LOG_LL_ERROR("[receiver]: reading message: error %zd\n", r)
+            ssize_t r2 = send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0;
+            if (r2) {
+                LOG_LL_ERROR("[receiver]: sending confirmation: error %zd\n", r2)
             } else {
                 LOG_LL_EVENT("[receiver]: sending reject: success\n")
                 continue;
@@ -142,21 +143,20 @@ ssize_t ll_write(int fd, const void *data, size_t nb) {
 
             s = send_information(fd, data, nb + 1, n);
             if (s < 0) {
-                LOG_LL_ERROR("[emitter]: sending message: error\n")
+                LOG_LL_ERROR("[emitter]: sending message: error %zd\n", s)
                 continue;
             } else {
                 LOG_LL_EVENT("[emitter]: sending message: success\n")
-                // }
             }
+            ++tries;
         }
         alarm(TIMEOUT);
 
         unsigned char a, c;
         ssize_t r;
         if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) continue;
-        else ++tries;
-        if (supervision_message(bytes, &a, &c, sizeof(bytes)) < 0 || a != ADDRESS_RECEIVER_EMITTER) {
-            LOG_LL_ERROR("[emitter]: reading confirmation: error\n")
+        if ((r = supervision_message(bytes, &a, &c, sizeof(bytes))) < 0 || a != ADDRESS_RECEIVER_EMITTER) {
+            LOG_LL_ERROR("[emitter]: reading confirmation: error %zd\n", r)
         } else {
             alarm(0);
             if (c == RR(!n)) {

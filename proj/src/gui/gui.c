@@ -33,24 +33,24 @@ FILE *driver_events;
 FILE *driver_errors;
 
 void print_progress_bar(double p, const char *d, bool is_error) {
-    const char *color = is_error ? RED : GREEN;
-    size_t no_chars = p * MAX_CHARS_PERCENTAGE;
-
-    printf("%s", CLEAR_SCREEN);
-    printf("%s", HEADER1);
-
-    size_t no_blank = MAX_CHARS_DESCRIPTION - strlen(d);
-    for (size_t i = 0; i < no_blank / 2; ++i) printf(" ");
-    printf("%s", color);
-    printf("%s", d);
-    printf("%s", RESET);
-    for (size_t i = 0; i < no_blank - no_blank / 2; ++i) printf(" ");
-    printf("%s", FOOTER1);
-    printf("%s", color);
-    for (size_t i = 0; i < no_chars; ++i) printf("%s", "█");
-    printf("%s", RESET);
-    for (size_t i = no_chars; i < MAX_CHARS_PERCENTAGE; ++i) printf(" ");
-    printf("%s", FOOTER2);
+    // const char *color = is_error ? RED : GREEN;
+    // size_t no_chars = p * MAX_CHARS_PERCENTAGE;
+    //
+    // printf("%s", CLEAR_SCREEN);
+    // printf("%s", HEADER1);
+    //
+    // size_t no_blank = MAX_CHARS_DESCRIPTION - strlen(d);
+    // for (size_t i = 0; i < no_blank / 2; ++i) printf(" ");
+    // printf("%s", color);
+    // printf("%s", d);
+    // printf("%s", RESET);
+    // for (size_t i = 0; i < no_blank - no_blank / 2; ++i) printf(" ");
+    // printf("%s", FOOTER1);
+    // printf("%s", color);
+    // for (size_t i = 0; i < no_chars; ++i) printf("%s", "█");
+    // printf("%s", RESET);
+    // for (size_t i = no_chars; i < MAX_CHARS_PERCENTAGE; ++i) printf(" ");
+    // printf("%s", FOOTER2);
 }
 
 int init_al_logs(void) {
