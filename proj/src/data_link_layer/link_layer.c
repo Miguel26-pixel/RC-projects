@@ -132,19 +132,23 @@ ssize_t ll_write(int fd, const void *data, size_t nb) {
     unsigned char bytes[BUF_SIZE];
 
     int tries = 1;
+    ssize_t s;
     while (tries <= MAX_ATTEMPTS) {
-        alarm(0);
-        LOG_LL_EVENT("TRY: %d/%d\n", tries, MAX_ATTEMPTS);
-        LOG_LL_EVENT("[emitter]: sending message (R = %d): message: %s\n", n, (char *) data);
+        for (int i = 0; i < NUMBER_OF_DUPLICATE_MESSAGES; ++i) {
 
-        ssize_t s = send_information(fd, data, nb + 1, n);
-        if (s < 0) {
-            LOG_LL_ERROR("[emitter]: sending message: error\n")
-            continue;
-        } else {
-            LOG_LL_EVENT("[emitter]: sending message: success\n")
+            alarm(0);
+            LOG_LL_EVENT("TRY: %d/%d\n", tries, MAX_ATTEMPTS);
+            LOG_LL_EVENT("[emitter]: sending message (R = %d): message: %s\n", n, (char *) data);
+
+            s = send_information(fd, data, nb + 1, n);
+            if (s < 0) {
+                LOG_LL_ERROR("[emitter]: sending message: error\n")
+                continue;
+            } else {
+                LOG_LL_EVENT("[emitter]: sending message: success\n")
+                // }
+            }
         }
-
         alarm(TIMEOUT);
 
         unsigned char a, c;

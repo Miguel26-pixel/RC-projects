@@ -13,7 +13,7 @@
 #define BUFFER_SIZE 2048
 
 int main(int argc, char **argv) {
-
+    srand(time(NULL));
     if (argc < 3 || argc > 4) {
         fprintf(stderr, RED"Usage:\temitter SerialPort FilePath [FileName]\n\tex: emitter /dev/ttyS1\n"RESET);
         exit(1);

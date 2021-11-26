@@ -6,6 +6,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include <stdlib.h>
+
 #include "../../include/errors/error_nos.h"
 #include "../../include/gui/gui.h"
 
@@ -24,6 +26,7 @@ size_t unstuff_bytes(const unsigned char *bytes, size_t nb, unsigned char *dest,
         } else {
             dest[j] = bytes[i];
         }
+        if (rand() % 10000 < BIT_FLIP_RATE) dest[j] = rand() % 256;
         ++j;
     }
     return j;
@@ -42,6 +45,7 @@ size_t stuff_bytes(const unsigned char *bytes, size_t nb, unsigned char *dest, s
         } else {
             dest[j++] = bytes[i];
         }
+        if (rand() % 10000 < BIT_FLIP_RATE) dest[j - 1] = rand() % 256;
     }
     return j;
 }
@@ -50,20 +54,19 @@ ssize_t read_frame(int fd, unsigned char *dest, size_t nbd) {
     bool stop = false;
     unsigned char bytes[BUF_SIZE];
     size_t i = 0;
-    while (!stop) {
+    while (!stop && i < nbd) {
         if (read(fd, bytes + i, 1) < 0) {
-            if (errno == EINTR) {
-                return TIMED_OUT;
-            } else {
-                continue;
-            }
+            if (errno == EINTR) { return TIMED_OUT; }
+            else { continue; }
         } else {
             alarm(0);
         }
 
+        if (rand() % 10000 < BIT_FLIP_RATE) bytes[i] = rand() % 256;
+
         if (bytes[i] == FLAG) {
-            if (bytes[i - 1] == FLAG) continue;
-            else if (i != 0) stop = true;
+            if (bytes[i - 1] == FLAG) { continue; }
+            else if (i != 0) { stop = true; }
         }
 
         ++i;
@@ -168,7 +171,9 @@ int connect_to_receiver(int fd) {
     int i;
     unsigned char bytes[BUF_SIZE];
     for (i = 1; i <= MAX_ATTEMPTS; ++i) {
-        send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, SET);
+        for (int j = 0; j < NUMBER_OF_REPEAT_SETS; ++j) {
+            send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, SET);
+        }
         LOG_LL_EVENT("[connecting]: attempt: %d\n", i)
         alarm(TIMEOUT);
         unsigned char a, c;

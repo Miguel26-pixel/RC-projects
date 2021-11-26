@@ -13,6 +13,7 @@
 
 
 int main(int argc, char **argv) {
+    srand(time(NULL));
     if (argc < 2 || argc > 2) {
         fprintf(stderr, RED"Usage:\treceiver SerialPort\n\tex: receiver /dev/ttyS1\n"RESET);
         exit(1);

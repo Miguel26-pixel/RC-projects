@@ -57,35 +57,35 @@ all: ${RECEIVER_TARGET} ${EMITTER_TARGET}
 ${RECEIVER_BUILD_DIR}/%.c.o: %.c
 	@echo "Building: " $<
 	@mkdir -p ${dir $@}
-	@${CC} ${CPPFLAGS} ${CFLAGS} -c $< -o $@ -g
+	@${CC} ${CPPFLAGS} ${CFLAGS} -c $< -o $@
 
 ${EMITTER_BUILD_DIR}/%.c.o: %.c
 	@echo "Building: " $<
 	@mkdir -p ${dir $@}
-	@${CC} ${CPPFLAGS} ${CFLAGS} -c $< -o $@ -g
+	@${CC} ${CPPFLAGS} ${CFLAGS} -c $< -o $@
 
 ${APPLICATION_LAYER_BUILD_DIR}/%.c.o: %.c
 	@echo "Building: " $<
 	@mkdir -p ${dir $@}
-	@${CC} ${CPPFLAGS} ${CFLAGS} -c $< -o $@ -g
+	@${CC} ${CPPFLAGS} ${CFLAGS} -c $< -o $@
 
 ${DATA_LINK_LAYER_BUILD_DIR}/%.c.o: %.c
 	@echo "Building: " $<
 	@mkdir -p ${dir $@}
-	@${CC} ${CPPFLAGS} ${CFLAGS} -c $< -o $@ -g
+	@${CC} ${CPPFLAGS} ${CFLAGS} -c $< -o $@
 
 ${GUI_BUILD_DIR}/%.c.o: %.c
 	@echo "Building: " $<
 	@mkdir -p ${dir $@}
-	@${CC} ${CPPFLAGS} ${CFLAGS} -c $< -o $@ -g
+	@${CC} ${CPPFLAGS} ${CFLAGS} -c $< -o $@
 
 ${RECEIVER_TARGET}: ${RECEIVER_OBJS} ${APPLICATION_LAYER_OBJS} ${DATA_LINK_LAYER_OBJS} ${GUI_OBJS}
 	@echo "Linking: " $@
-	@${CC} ${RECEIVER_OBJS} ${APPLICATION_LAYER_OBJS} ${DATA_LINK_LAYER_OBJS} ${GUI_OBJS} -o $@ ${LDFLAGS} -g
+	@${CC} ${RECEIVER_OBJS} ${APPLICATION_LAYER_OBJS} ${DATA_LINK_LAYER_OBJS} ${GUI_OBJS} -o $@ ${LDFLAGS}
 
 ${EMITTER_TARGET}: ${EMITTER_OBJS} ${APPLICATION_LAYER_OBJS} ${DATA_LINK_LAYER_OBJS} ${GUI_OBJS}
 	@echo "Linking: " $@
-	@${CC} ${EMITTER_OBJS} ${APPLICATION_LAYER_OBJS} ${DATA_LINK_LAYER_OBJS} ${GUI_OBJS} -o $@ ${LDFLAGS} -g
+	@${CC} ${EMITTER_OBJS} ${APPLICATION_LAYER_OBJS} ${DATA_LINK_LAYER_OBJS} ${GUI_OBJS} -o $@ ${LDFLAGS}
 
 .PHONY: clean
 clean:

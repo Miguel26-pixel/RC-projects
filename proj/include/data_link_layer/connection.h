@@ -4,8 +4,11 @@
 #include <sys/types.h>
 #include <stdbool.h>
 
-#define MAX_ATTEMPTS 3
+#define MAX_ATTEMPTS 30
 #define TIMEOUT 3
+#define NUMBER_OF_REPEAT_SETS 10
+#define NUMBER_OF_DUPLICATE_MESSAGES 4
+#define BIT_FLIP_RATE 5
 
 #define FLAG 0x7E
 #define ADDRESS_EMITTER_RECEIVER 0x03
