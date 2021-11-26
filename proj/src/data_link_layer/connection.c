@@ -201,13 +201,17 @@ int disconnect_from_receiver(int fd) {
     ssize_t r;
     unsigned char a, c;
     unsigned char bytes[BUF_SIZE];
-
-    if ((r = send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, DISC)) < 0) { return r; }
-    else if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) { return r; }
-    else if ((r = supervision_message(bytes, &a, &c, sizeof(bytes))) < 0) { return r; }
-    else if (a != ADDRESS_RECEIVER_EMITTER || c != DISC) { return INVALID_RESPONSE; }
-    else if ((r = send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, UA)) < 0) { return r; }
-    else { return SUCCESS; }
+    while (true) {
+        if ((r = send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, DISC)) < 0) {}
+        else if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) {}
+        else if ((r = supervision_message(bytes, &a, &c, sizeof(bytes))) < 0) {}
+        else if (a != ADDRESS_RECEIVER_EMITTER || c != DISC) {}
+        else if ((r = send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, UA)) < 0) {}
+        else {
+            sleep(2);
+            return SUCCESS;
+        }
+    }
 }
 
 int disconnect_from_emitter(int fd) {
