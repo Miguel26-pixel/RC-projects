@@ -94,13 +94,15 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
 
     while (out_of_order) {
         LOG_LL_EVENT("[receiver]: reading message (R = %d)\n", n)
-        if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) { puts("FRAME"); return r;}
+        if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) { return r; }
         r = information_message(bytes, r, data, nb);
         if (r == EOF_DISCONNECT) {
             LOG_LL_EVENT("[receiver]: received disconnect\n")
             return EOF_DISCONNECT;
         } else if (r == OUT_OF_ORDER) {
             n = !n;
+        } else if (r == WRONG_HEADER) {
+            continue;
         } else if (r < 0) {
             LOG_LL_ERROR("[receiver]: reading message: error\n")
             if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0) {
@@ -159,6 +161,9 @@ ssize_t ll_write(int fd, const void *data, size_t nb) {
                 return s;
             } else if (c == REJ(n)) {
                 LOG_LL_ERROR("[emitter]: reading confirmation: error: message rejected\n")
+            } else {
+                --tries;
+                continue;
             }
         }
     }

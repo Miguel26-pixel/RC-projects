@@ -110,7 +110,7 @@ ssize_t supervision_message(const unsigned char *m, unsigned char *a, unsigned c
 
 ssize_t information_message(const unsigned char *m, size_t nb, unsigned char *d, size_t nbd) {
     typedef enum {
-        READ_START_FLAG, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, READ_BCC2, READ_END_FLAG
+        READ_START_FLAG, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, CHECK_CONTROL, READ_BCC2, READ_END_FLAG
     } state_t;
 
     state_t s = READ_START_FLAG;
@@ -129,8 +129,14 @@ ssize_t information_message(const unsigned char *m, size_t nb, unsigned char *d,
             if (c == DISC) return EOF_DISCONNECT;
             s = READ_BCC1;
         } else if (s == READ_BCC1) {
-            if (m[i] == (unsigned char) (a ^ c)) s = READ_DATA;
+            if (m[i] == (unsigned char) (a ^ c)) s = CHECK_CONTROL;
             else return PARITY_ERROR;
+        } else if (s == CHECK_CONTROL) {
+            if (c == DISC) return EOF_DISCONNECT;
+            else if (c == CI(!n)) return OUT_OF_ORDER;
+            else if (c == CI(n)) s = READ_DATA;
+            else return WRONG_HEADER;
+            --i;
         } else if (s == READ_DATA) {
             if (i == nb - 2) {
                 s = READ_BCC2;
