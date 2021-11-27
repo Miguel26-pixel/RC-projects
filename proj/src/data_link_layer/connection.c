@@ -52,7 +52,7 @@ size_t stuff_bytes(const unsigned char *bytes, size_t nb, unsigned char *dest, s
 
 ssize_t read_frame(int fd, unsigned char *dest, size_t nbd) {
     bool stop = false;
-    unsigned char bytes[BUF_SIZE];
+    unsigned char bytes[LL_SIZE_MAX];
     size_t i = 0;
     while (!stop && i < nbd) {
         if (read(fd, bytes + i, 1) < 0) {
@@ -73,7 +73,7 @@ ssize_t read_frame(int fd, unsigned char *dest, size_t nbd) {
     return (ssize_t) i;
 }
 
-ssize_t supervision_message(const unsigned char *m, unsigned char *a, unsigned char *c, size_t nb) {
+ssize_t check_supervision_frame(const unsigned char *m, unsigned char *a, unsigned char *c, size_t nb) {
     // COMBACK: ptr
     typedef enum {
         READ_START_FLAG, READ_ADDRESS, READ_CONTROL, READ_BCC, READ_END_FLAG
@@ -100,13 +100,13 @@ ssize_t supervision_message(const unsigned char *m, unsigned char *a, unsigned c
         } else if (s == READ_END_FLAG && m[i] == FLAG) {
             return SUCCESS;
         } else {
-            return -1;
+            return INVALID_RESPONSE;
         }
         ++i;
     }
 }
 
-ssize_t information_message(const unsigned char *m, size_t nb, unsigned char *d, size_t nbd) {
+ssize_t check_i_frame(const unsigned char *m, size_t nb, unsigned char *d, size_t nbd) {
     typedef enum {
         READ_START_FLAG, READ_ADDRESS, READ_CONTROL, READ_BCC1, READ_DATA, CHECK_CONTROL, READ_BCC2, READ_END_FLAG
     } state_t;
@@ -115,14 +115,14 @@ ssize_t information_message(const unsigned char *m, size_t nb, unsigned char *d,
     size_t i = 0, j = 0;
     unsigned char a, c;
     while (true) {
-        // if (i == nb) pause();// return BUFFER_OVERFLOW;
+        if (i == nb) return BUFFER_OVERFLOW;
         if (s == READ_START_FLAG) {
             if (m[i] == FLAG) s = READ_ADDRESS;
             //COMBACK
-        } else if (s == READ_ADDRESS && true) {
+        } else if (s == READ_ADDRESS && m[i] == ADDRESS_EMITTER_RECEIVER) {
             a = m[i];
             s = READ_CONTROL;
-        } else if (s == READ_CONTROL && true) {
+        } else if (s == READ_CONTROL && (m[i] == DISC || m[i] == CI(n) || m[i] == CI(!n))) {
             c = m[i];
             if (c == DISC) return EOF_DISCONNECT;
             s = READ_BCC1;
@@ -145,36 +145,36 @@ ssize_t information_message(const unsigned char *m, size_t nb, unsigned char *d,
             }
         } else if (s == READ_BCC2) {
             unsigned char bcc2;
-            calculateBCC(d, &bcc2, j);
+            calculate_bcc(d, &bcc2, j);
             if (m[i] == bcc2) { s = READ_END_FLAG; }
             else { return PARITY_ERROR_2; }
         } else if (s == READ_END_FLAG && m[i] == FLAG) {
-            return j;
+            return (ssize_t) j;
         } else {
-            return -1;
+            return INVALID_RESPONSE;
         }
         ++i;
     }
 }
 
-ssize_t send_supervision_message(int fd, unsigned char address, unsigned char control) {
+ssize_t send_supervision_frame(int fd, unsigned char address, unsigned char control) {
     unsigned char message[] = {FLAG, address, control, address ^ control, FLAG};
     return write(fd, message, sizeof(message));
 }
 
 int connect_to_receiver(int fd) {
     int i;
-    unsigned char bytes[BUF_SIZE];
+    unsigned char bytes[LL_SIZE_MAX];
     for (i = 1; i <= MAX_ATTEMPTS; ++i) {
         alarm(0);
         for (int j = 0; j < NUMBER_OF_REPEAT_SETS; ++j) {
-            send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, SET);
-        }
+        send_supervision_frame(fd, ADDRESS_EMITTER_RECEIVER, SET);
+         }
         LOG_LL_EVENT("[connecting]: attempt: %d\n", i)
         alarm(TIMEOUT);
         unsigned char a, c;
         if (read_frame(fd, bytes, sizeof(bytes)) < 0) {}
-        else if (supervision_message(bytes, &a, &c, sizeof(bytes)) < 0) {}
+        else if (check_supervision_frame(bytes, &a, &c, sizeof(bytes)) < 0) {}
         else if (a != ADDRESS_RECEIVER_EMITTER || c != UA) {}
         else { return SUCCESS; }
     }
@@ -184,25 +184,25 @@ int connect_to_receiver(int fd) {
 int connect_to_emitter(int fd) {
     unsigned char a, c;
     ssize_t r;
-    unsigned char bytes[BUF_SIZE];
+    unsigned char bytes[LL_SIZE_MAX];
 
     if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) { return r; }
-    else if ((r = supervision_message(bytes, &a, &c, sizeof(bytes))) < 0) { return r; }
+    else if ((r = check_supervision_frame(bytes, &a, &c, sizeof(bytes))) < 0) { return r; }
     else if (a != ADDRESS_EMITTER_RECEIVER || c != SET) { return INVALID_RESPONSE; }
-    else if ((r = send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, UA)) < 0) { return r; }
+    else if ((r = send_supervision_frame(fd, ADDRESS_RECEIVER_EMITTER, UA)) < 0) { return r; }
     else { return SUCCESS; }
 }
 
 int disconnect_from_receiver(int fd) {
     ssize_t r;
     unsigned char a, c;
-    unsigned char bytes[BUF_SIZE];
+    unsigned char bytes[LL_SIZE_MAX];
     while (true) {
-        if ((r = send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, DISC)) < 0) {}
-        else if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) {}
-        else if ((r = supervision_message(bytes, &a, &c, sizeof(bytes))) < 0) {}
-        else if (a != ADDRESS_RECEIVER_EMITTER || c != DISC) {}
-        else if ((r = send_supervision_message(fd, ADDRESS_EMITTER_RECEIVER, UA)) < 0) {}
+        if ((r = send_supervision_frame(fd, ADDRESS_EMITTER_RECEIVER, DISC)) < 0) { return (int) r; }
+        else if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) { return (int) r; }
+        else if ((r = check_supervision_frame(bytes, &a, &c, sizeof(bytes))) < 0) { return (int) r; }
+        else if (a != ADDRESS_RECEIVER_EMITTER || c != DISC) { return (int) r; }
+        else if ((r = send_supervision_frame(fd, ADDRESS_EMITTER_RECEIVER, UA)) < 0) { return (int) r; }
         else {
             sleep(2);
             return SUCCESS;
@@ -213,18 +213,18 @@ int disconnect_from_receiver(int fd) {
 int disconnect_from_emitter(int fd) {
     ssize_t r;
     unsigned char a, c;
-    unsigned char bytes[BUF_SIZE];
-    if ((r = send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, DISC)) < 0) { return r; }
+    unsigned char bytes[LL_SIZE_MAX];
+    if ((r = send_supervision_frame(fd, ADDRESS_RECEIVER_EMITTER, DISC)) < 0) { return (int) r; }
     while (true) {
-        if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) { return r; }
-        else if ((r = supervision_message(bytes, &a, &c, 0)) < 0) { return r; }
+        if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) { return (int) r; }
+        else if ((r = check_supervision_frame(bytes, &a, &c, sizeof(bytes))) < 0) { return (int) r; }
         else if (a == ADDRESS_EMITTER_RECEIVER && c == UA) { break; }
+        else { return SUCCESS; }
     }
-
     return SUCCESS;
 }
 
-ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no) {
+ssize_t send_i_frame(int fd, const unsigned char *data, size_t nb, bool no) {
     if (data == NULL) return NULL_POINTER_ERROR;
 
     unsigned char header[] = {FLAG, ADDRESS_EMITTER_RECEIVER, CI(no),
@@ -234,14 +234,14 @@ ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no) 
 
     ssize_t res;
     size_t nbd;
-    unsigned char bytes[BUF_SIZE];
+    unsigned char bytes[LL_SIZE_MAX * 2];
 
     nbd = stuff_bytes(data, nb, bytes, sizeof(bytes));
     if ((res = write(fd, bytes, nbd)) < 0) return IO_ERROR;
 
     unsigned char a[3];
     unsigned char bcc2;
-    calculateBCC(data, &bcc2, nb);
+    calculate_bcc(data, &bcc2, nb);
     nbd = stuff_bytes(&bcc2, 1, a, sizeof(a));
     a[nbd++] = FLAG;
 
@@ -250,10 +250,10 @@ ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no) 
     return res;
 }
 
-int calculateBCC(const unsigned char *data, unsigned char *bcc2, size_t size) {
+int calculate_bcc(const unsigned char *data, unsigned char *bcc2, size_t nb) {
     if (data == NULL || bcc2 == NULL) return NULL_POINTER_ERROR;
 
     *bcc2 = 0;
-    for (int j = 0; j < size; ++j) *bcc2 = (unsigned char) (*bcc2 ^ data[j]);
+    for (int j = 0; j < nb; ++j) *bcc2 = (unsigned char) (*bcc2 ^ data[j]);
     return SUCCESS;
 }

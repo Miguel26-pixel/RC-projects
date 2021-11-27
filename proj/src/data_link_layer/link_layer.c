@@ -90,12 +90,12 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
     bool out_of_order = true;
     ssize_t r;
 
-    unsigned char bytes[BUF_SIZE];
+    unsigned char bytes[LL_SIZE_MAX];
 
     while (out_of_order) {
         LOG_LL_EVENT("[receiver]: reading message (R = %d)\n", n)
         if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) { return r; }
-        r = information_message(bytes, r, data, nb);
+        r = check_i_frame(bytes, r, data, nb);
         if (r == EOF_DISCONNECT) {
             LOG_LL_EVENT("[receiver]: received disconnect\n")
             return EOF_DISCONNECT;
@@ -105,7 +105,7 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
             continue;
         } else if (r < 0) {
             LOG_LL_ERROR("[receiver]: reading message: error %zd\n", r)
-            ssize_t r2 = send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0;
+            ssize_t r2 = send_supervision_frame(fd, ADDRESS_RECEIVER_EMITTER, REJ(n)) < 0;
             if (r2) {
                 LOG_LL_ERROR("[receiver]: sending confirmation: error %zd\n", r2)
             } else {
@@ -118,7 +118,7 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
             out_of_order = false;
         }
 
-        if (send_supervision_message(fd, ADDRESS_RECEIVER_EMITTER, RR(!n)) < 0) {
+        if (send_supervision_frame(fd, ADDRESS_RECEIVER_EMITTER, RR(!n)) < 0) {
             LOG_LL_ERROR("[receiver]: sending confirmation: error\n")
         } else {
             LOG_LL_EVENT("[receiver]: sending confirmation: success\n")
@@ -130,32 +130,32 @@ ssize_t ll_read(int fd, void *data, size_t nb) {
 
 ssize_t ll_write(int fd, const void *data, size_t nb) {
     if (data == NULL) return NULL_POINTER_ERROR;
-    unsigned char bytes[BUF_SIZE];
+    unsigned char bytes[LL_SIZE_MAX];
 
     int tries = 1;
     ssize_t s;
     while (tries <= MAX_ATTEMPTS) {
         for (int i = 0; i < NUMBER_OF_DUPLICATE_MESSAGES; ++i) {
 
-            alarm(0);
-            LOG_LL_EVENT("TRY: %d/%d\n", tries, MAX_ATTEMPTS);
-            LOG_LL_EVENT("[emitter]: sending message (R = %d): message: %s\n", n, (char *) data);
+        alarm(0);
+        LOG_LL_EVENT("TRY: %d/%d\n", tries, MAX_ATTEMPTS);
+        LOG_LL_EVENT("[emitter]: sending message (R = %d): message: %s\n", n, (char *) data);
 
-            s = send_information(fd, data, nb + 1, n);
-            if (s < 0) {
-                LOG_LL_ERROR("[emitter]: sending message: error %zd\n", s)
-                continue;
-            } else {
-                LOG_LL_EVENT("[emitter]: sending message: success\n")
-            }
-            ++tries;
+        s = send_i_frame(fd, data, nb + 1, n);
+        if (s < 0) {
+            LOG_LL_ERROR("[emitter]: sending message: error %zd\n", s)
+            continue;
+        } else {
+            LOG_LL_EVENT("[emitter]: sending message: success\n")
+        }
+        ++tries;
         }
         alarm(TIMEOUT);
 
         unsigned char a, c;
         ssize_t r;
-        if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) continue;
-        if ((r = supervision_message(bytes, &a, &c, sizeof(bytes))) < 0 || a != ADDRESS_RECEIVER_EMITTER) {
+        if (read_frame(fd, bytes, sizeof(bytes)) < 0) continue;
+        if ((r = check_supervision_frame(bytes, &a, &c, sizeof(bytes))) < 0 || a != ADDRESS_RECEIVER_EMITTER) {
             LOG_LL_ERROR("[emitter]: reading confirmation: error %zd\n", r)
         } else {
             alarm(0);

@@ -6,8 +6,8 @@
 
 #define MAX_ATTEMPTS 30
 #define TIMEOUT 3
-#define NUMBER_OF_REPEAT_SETS 10
-#define NUMBER_OF_DUPLICATE_MESSAGES 4
+#define NUMBER_OF_REPEAT_SETS 1
+#define NUMBER_OF_DUPLICATE_MESSAGES 1
 #define BIT_FLIP_RATE 5
 
 #define FLAG 0x7E
@@ -29,16 +29,17 @@
 #define ESC22 0x5D
 #define REP2 0x7D
 
-#define BUF_SIZE 5192
+#define LL_SIZE_MAX 5192
 
-size_t unstuff_bytes(const unsigned char *bytes, size_t nb, unsigned char *dest, size_t nbd);
 size_t stuff_bytes(const unsigned char *bytes, size_t nb, unsigned char *dest, size_t nbd);
+size_t unstuff_bytes(const unsigned char *bytes, size_t nb, unsigned char *dest, size_t nbd);
 
 ssize_t read_frame(int fd, unsigned char *dest, size_t nbd);
-ssize_t supervision_message(const unsigned char *m, unsigned char *a, unsigned char *c, size_t nb);
-ssize_t information_message(const unsigned char *m, size_t nb, unsigned char *d, size_t nbd);
+ssize_t check_supervision_frame(const unsigned char *m, unsigned char *a, unsigned char *c, size_t nb);
+ssize_t check_i_frame(const unsigned char *m, size_t nb, unsigned char *d, size_t nbd);
 
-ssize_t send_supervision_message(int fd, unsigned char address, unsigned char control);
+ssize_t send_i_frame(int fd, const unsigned char *data, size_t nb, bool no);
+ssize_t send_supervision_frame(int fd, unsigned char address, unsigned char control);
 
 int connect_to_receiver(int fd);
 int connect_to_emitter(int fd);
@@ -46,8 +47,6 @@ int connect_to_emitter(int fd);
 int disconnect_from_receiver(int fd);
 int disconnect_from_emitter(int fd);
 
-ssize_t send_information(int fd, const unsigned char *data, size_t nb, bool no);
-
-int calculateBCC(const unsigned char *data, unsigned char *bcc2, size_t size);
+int calculate_bcc(const unsigned char *data, unsigned char *bcc2, size_t nb);
 
 #endif  // PROJ_SRC_DATA_LINK_LAYER_INCLUDE_CONNECTION_H_

@@ -5,7 +5,8 @@
 #include "../../../include/errors/error_nos.h"
 
 int process_control_packet(const unsigned char *bytes, size_t nb, control_packet_t *packet, bool is_start) {
-    if ((is_start && bytes[0] != C_START) || (!is_start && bytes[0] != C_END)) return INVALID_RESPONSE;
+    if (bytes == NULL || packet == NULL) { return NULL_POINTER_ERROR; }
+    else if ((is_start && bytes[0] != C_START) || (!is_start && bytes[0] != C_END)) { return INVALID_RESPONSE; }
     memset(packet, 0, sizeof(*packet));
 
     unsigned char t, l;
@@ -18,28 +19,36 @@ int process_control_packet(const unsigned char *bytes, size_t nb, control_packet
             memcpy(&packet->file_size, bytes + i, l);
         } else if (t == T_FILE_NAME) {
             char *s = malloc(l);
-            memcpy(s, bytes + i, l);
+            if (s == NULL) return BUFFER_OVERFLOW;
+            else memcpy(s, bytes + i, l);
             packet->file_name = s;
-        } else {
-        }
+        } else {}
         i += l;
     }
     return SUCCESS;
 }
 
 size_t process_data_packet(const unsigned char *bytes, size_t nb, unsigned char *dest, unsigned char no, size_t nbd) {
+    if (bytes == NULL || dest == NULL) { return BUFFER_OVERFLOW; }
+
     unsigned char c = bytes[0];
-    if (c != C_DATA) return INVALID_RESPONSE;
+    if (c != C_DATA) { return INVALID_RESPONSE; }
+
     unsigned char n = bytes[1];
-    if (n != no) return OUT_OF_ORDER;
+    if (n != no) { return OUT_OF_ORDER; }
+
     unsigned char l1 = bytes[2], l2 = bytes[3];
     size_t l = 256 * l1 + l2;
-    if (l > nb - 4 || l > nbd) return BUFFER_OVERFLOW;
-    memcpy(dest, bytes + 4, l);
+    if (l > nb - 4 || l > nbd) { return BUFFER_OVERFLOW; }
+    else { memcpy(dest, bytes + 4, l); }
+
     return l;
 }
 
-size_t assemble_control_packet(control_packet_t packet, bool is_start, unsigned char *dest, size_t dnb) {
+size_t assemble_control_packet(control_packet_t packet, bool is_start, unsigned char *dest, size_t nbd) {
+    if (dest == NULL) { return NULL_POINTER_ERROR; }
+
+    if (nbd < 3 + sizeof(packet.file_size)) { return BUFFER_OVERFLOW; }
     size_t i = 0;
     dest[i++] = (is_start) ? C_START : C_END;
     dest[i++] = T_FILE_SIZE;
@@ -48,6 +57,8 @@ size_t assemble_control_packet(control_packet_t packet, bool is_start, unsigned 
     i += sizeof(packet.file_size);
 
     if (packet.file_name != NULL) {
+        if (nbd < 4 + 2 + strlen(packet.file_name) + 1) { return BUFFER_OVERFLOW; }
+
         dest[i++] = T_FILE_NAME;
         dest[i++] = strlen(packet.file_name) + 1;
         strcpy((char *) (dest + i), packet.file_name);
@@ -57,7 +68,10 @@ size_t assemble_control_packet(control_packet_t packet, bool is_start, unsigned 
     return i;
 }
 
-size_t assemble_data_packet(void *src, size_t nb, unsigned char *dest, size_t dnb, unsigned char no) {
+size_t assemble_data_packet(void *src, size_t nb, unsigned char *dest, size_t nbd, unsigned char no) {
+    if (src == NULL || dest == NULL) { return NULL_POINTER_ERROR; }
+    else if (nbd < 4 + nb) { return BUFFER_OVERFLOW; }
+
     size_t i = 0;
     dest[i++] = C_DATA;
     dest[i++] = no;
