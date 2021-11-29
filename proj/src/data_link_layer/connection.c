@@ -167,16 +167,19 @@ int connect_to_receiver(int fd) {
     unsigned char bytes[LL_SIZE_MAX];
     for (i = 1; i <= MAX_ATTEMPTS; ++i) {
         alarm(0);
-        for (int j = 0; j < NUMBER_OF_REPEAT_SETS; ++j) {
-        send_supervision_frame(fd, ADDRESS_EMITTER_RECEIVER, SET);
-         }
+        for (int j = 0; j < NUMBER_OF_REPEAT_SETS; ++j) { send_supervision_frame(fd, ADDRESS_EMITTER_RECEIVER, SET); }
         LOG_LL_EVENT("[connecting]: attempt: %d\n", i)
         alarm(TIMEOUT);
         unsigned char a, c;
-        if (read_frame(fd, bytes, sizeof(bytes)) < 0) {}
-        else if (check_supervision_frame(bytes, &a, &c, sizeof(bytes)) < 0) {}
-        else if (a != ADDRESS_RECEIVER_EMITTER || c != UA) {}
-        else { return SUCCESS; }
+        if (read_frame(fd, bytes, sizeof(bytes)) < 0) {
+            continue;
+        } else if (check_supervision_frame(bytes, &a, &c, sizeof(bytes)) < 0) {
+            continue;
+        } else if (a != ADDRESS_RECEIVER_EMITTER || c != UA) {
+            continue;
+        } else {
+            return SUCCESS;
+        }
     }
     return TOO_MANY_ATTEMPTS;
 }
@@ -185,12 +188,13 @@ int connect_to_emitter(int fd) {
     unsigned char a, c;
     ssize_t r;
     unsigned char bytes[LL_SIZE_MAX];
-
-    if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) { return r; }
-    else if ((r = check_supervision_frame(bytes, &a, &c, sizeof(bytes))) < 0) { return r; }
-    else if (a != ADDRESS_EMITTER_RECEIVER || c != SET) { return INVALID_RESPONSE; }
-    else if ((r = send_supervision_frame(fd, ADDRESS_RECEIVER_EMITTER, UA)) < 0) { return r; }
-    else { return SUCCESS; }
+    while (true) {
+        if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) { return r; }
+        else if ((r = check_supervision_frame(bytes, &a, &c, sizeof(bytes))) < 0) { continue; }
+        else if (a != ADDRESS_EMITTER_RECEIVER || c != SET) { continue; }
+        else if ((r = send_supervision_frame(fd, ADDRESS_RECEIVER_EMITTER, UA)) < 0) { continue; }
+        else { return SUCCESS; }
+    }
 }
 
 int disconnect_from_receiver(int fd) {
@@ -200,8 +204,8 @@ int disconnect_from_receiver(int fd) {
     while (true) {
         if ((r = send_supervision_frame(fd, ADDRESS_EMITTER_RECEIVER, DISC)) < 0) { return (int) r; }
         else if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) { return (int) r; }
-        else if ((r = check_supervision_frame(bytes, &a, &c, sizeof(bytes))) < 0) { return (int) r; }
-        else if (a != ADDRESS_RECEIVER_EMITTER || c != DISC) { return (int) r; }
+        else if (check_supervision_frame(bytes, &a, &c, sizeof(bytes)) < 0) { continue; }
+        else if (a != ADDRESS_RECEIVER_EMITTER || c != DISC) { continue; }
         else if ((r = send_supervision_frame(fd, ADDRESS_EMITTER_RECEIVER, UA)) < 0) { return (int) r; }
         else {
             sleep(2);
@@ -219,7 +223,6 @@ int disconnect_from_emitter(int fd) {
         if ((r = read_frame(fd, bytes, sizeof(bytes))) < 0) { return (int) r; }
         else if ((r = check_supervision_frame(bytes, &a, &c, sizeof(bytes))) < 0) { return (int) r; }
         else if (a == ADDRESS_EMITTER_RECEIVER && c == UA) { break; }
-        else { return SUCCESS; }
     }
     return SUCCESS;
 }

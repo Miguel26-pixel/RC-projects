@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     size_t no_bytes_received = 0;
 
     size_t i = 0;
-    size_t n;
+    ssize_t n;
 
     unsigned char data[BUFFER_SIZE];
     while (true) {
@@ -124,13 +124,16 @@ int main(int argc, char **argv) {
     LOG_AL_EVENT("[receiver]: received\n")
     print_progress_bar(1, "RECEIVED", false);
 
+    fsync(fd2);
+    close(fd2);
+
     LOG_AL_EVENT("[receiver]: checking integrity\n")
     print_progress_bar(1, "CHECKING INTEGRITY", false);
     if (start_packet.file_size != end_packet.file_size ||
         (start_packet.file_name != NULL && end_packet.file_name != NULL &&
          strcmp(start_packet.file_name, end_packet.file_name) != 0)) {
         LOG_AL_ERROR("[receiver]: integrity not ok\n")
-        exit(10);
+        // exit(10);
     } else {
         LOG_AL_EVENT("[receiver]: integrity ok\n")
         print_progress_bar(1, "INTEGRITY OK", false);

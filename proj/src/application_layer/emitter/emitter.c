@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 
         n = assemble_data_packet(buf, n, pa, sizeof(pa), i % 256);
         if (n < 0 || ll_write(fd, pa, n) < 0) {
-            LOG_AL_ERROR("[emitter]: sending data packet\n")
+            LOG_AL_ERROR("[emitter]: error sending data packet\n")
             print_progress_bar(0, "ERROR SENDING", true);
             exit(6);
         } else {

@@ -28,7 +28,7 @@ int process_control_packet(const unsigned char *bytes, size_t nb, control_packet
     return SUCCESS;
 }
 
-size_t process_data_packet(const unsigned char *bytes, size_t nb, unsigned char *dest, unsigned char no, size_t nbd) {
+ssize_t process_data_packet(const unsigned char *bytes, size_t nb, unsigned char *dest, unsigned char no, size_t nbd) {
     if (bytes == NULL || dest == NULL) { return BUFFER_OVERFLOW; }
 
     unsigned char c = bytes[0];
@@ -42,7 +42,7 @@ size_t process_data_packet(const unsigned char *bytes, size_t nb, unsigned char 
     if (l > nb - 4 || l > nbd) { return BUFFER_OVERFLOW; }
     else { memcpy(dest, bytes + 4, l); }
 
-    return l;
+    return (ssize_t) l;
 }
 
 size_t assemble_control_packet(control_packet_t packet, bool is_start, unsigned char *dest, size_t nbd) {
