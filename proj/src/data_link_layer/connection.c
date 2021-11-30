@@ -58,9 +58,7 @@ ssize_t read_frame(int fd, unsigned char *dest, size_t nbd) {
         if (read(fd, bytes + i, 1) < 0) {
             if (errno == EINTR) { return TIMED_OUT; }
             else { continue; }
-        } else {
-            alarm(0);
-        }
+        } 
 
         if (bytes[i] == FLAG) {
             if (bytes[i - 1] == FLAG) { continue; }
@@ -69,6 +67,7 @@ ssize_t read_frame(int fd, unsigned char *dest, size_t nbd) {
 
         ++i;
     }
+    alarm(0);
     i = unstuff_bytes(bytes, i, dest, nbd);
     return (ssize_t) i;
 }
