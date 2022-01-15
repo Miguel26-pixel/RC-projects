@@ -2,6 +2,8 @@
  /.vscode/
  emitter
  receiver
+ transmitted
+ proj/*.log
 
 # Prerequisites
 *.d
