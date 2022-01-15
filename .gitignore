@@ -3,7 +3,7 @@
  emitter
  receiver
  transmitted
- proj/*.log
+ *.log
 
 # Prerequisites
 *.d
