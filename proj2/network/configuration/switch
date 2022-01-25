@@ -1,0 +1,156 @@
+show run
+Building configuration...
+
+Current configuration : 3480 bytes
+!
+version 12.2
+no service pad
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname tux-sw3
+!
+boot-start-marker
+boot-end-marker
+!
+enable secret 5 $1$m1av$iEtCTJhcwb4Jy1CeS58Lx1
+!
+username root privilege 15 secret 5 $1$mqd/$//c8zeA7D1vsDOE8meaVc0
+!
+!
+no aaa new-model
+system mtu routing 1500
+vtp file vtpconfig
+!
+!
+!
+!
+crypto pki trustpoint TP-self-signed-4214946432
+ enrollment selfsigned
+ subject-name cn=IOS-Self-Signed-Certificate-4214946432
+ revocation-check none
+ rsakeypair TP-self-signed-4214946432
+!
+!
+crypto pki certificate chain TP-self-signed-4214946432
+ certificate self-signed 01
+  30820240 308201A9 A0030201 02020101 300D0609 2A864886 F70D0101 04050030 
+  31312F30 2D060355 04031326 494F532D 53656C66 2D536967 6E65642D 43657274 
+  69666963 6174652D 34323134 39343634 3332301E 170D3933 30333031 30303031 
+  30315A17 0D323030 31303130 30303030 305A3031 312F302D 06035504 03132649 
+  4F532D53 656C662D 5369676E 65642D43 65727469 66696361 74652D34 32313439 
+  34363433 3230819F 300D0609 2A864886 F70D0101 01050003 818D0030 81890281 
+  8100AE31 E1A78CFD 8F4BB70A E4C2F803 C9B14461 B720F46A 61DBBF21 8B13706A 
+  A699D495 B0303EAE 3EE8B6DD E3BE597C E1F7D8FC 74A81443 8FDEA823 8FD10694 
+  E9AE47F0 44B4A258 CF67568E 8422CC6B 1C6512A5 177BAE4F 5E699C5E 17B61967 
+  3387FEB8 5B529B3A 36D1CBEB 89A58CD1 978C75A5 463A1756 58A6E332 A316BE7F 
+  6B130203 010001A3 68306630 0F060355 1D130101 FF040530 030101FF 30130603 
+  551D1104 0C300A82 08747578 2D737733 2E301F06 03551D23 04183016 801402E7 
+  45F91908 1E79CB32 B1D6E51F ABF75E65 0220301D 0603551D 0E041604 1402E745 
+  F919081E 79CB32B1 D6E51FAB F75E6502 20300D06 092A8648 86F70D01 01040500 
+  03818100 91B53EB5 08877AFE CEF2C522 08207F2D E1F69713 4004E881 E4B869DF 
+  19991D26 2956DBC3 D3647978 9E347EBB 972092DE 02A8F281 D4819B21 701922D0 
+  14C181C3 085F5DC2 85E6F41B 4274251A 3C66F5FF 7AF87682 94D2D24E 96644771 
+  FB2D5EA9 0E5EB2BB 043A200A 35E4F42A 5F585AD1 EA101F5B 85C4DF7A 6DA14AEA E0A1F894
+  quit
+!
+!
+!
+spanning-tree mode pvst
+spanning-tree extend system-id
+!
+vlan internal allocation policy ascending
+!
+!
+!
+!
+interface FastEthernet0/1
+ switchport access vlan 31
+ switchport mode access
+!
+interface FastEthernet0/2
+!
+interface FastEthernet0/3
+!
+interface FastEthernet0/4
+!
+interface FastEthernet0/5
+!
+interface FastEthernet0/6
+!
+interface FastEthernet0/7
+!
+interface FastEthernet0/8
+ switchport access vlan 31
+ switchport mode access
+!
+interface FastEthernet0/9
+!
+interface FastEthernet0/10
+!
+interface FastEthernet0/11
+!
+interface FastEthernet0/12
+!
+interface FastEthernet0/13
+ switchport access vlan 31
+ switchport mode access
+!
+interface FastEthernet0/14
+!
+interface FastEthernet0/15
+!
+interface FastEthernet0/16
+!
+interface FastEthernet0/17
+!
+interface FastEthernet0/18
+ switchport access vlan 30
+ switchport mode access
+!
+interface FastEthernet0/19
+ switchport access vlan 31
+ switchport mode access
+!
+interface FastEthernet0/20
+!
+interface FastEthernet0/21
+!
+interface FastEthernet0/22
+!
+interface FastEthernet0/23
+ switchport access vlan 30
+ switchport mode access
+!
+interface FastEthernet0/24
+!
+interface GigabitEthernet0/1
+!
+interface GigabitEthernet0/2
+!
+interface Vlan1
+ ip address 172.16.1.30 255.255.255.0
+ no ip route-cache
+ no ip mroute-cache
+!
+ip classless
+ip http server
+ip http secure-server
+!
+!
+ip sla enable reaction-alerts
+!
+!
+!
+line con 0
+line vty 0 4
+ privilege level 15
+ password 7 014B080B491F0303
+ login
+line vty 5 15
+ login
+!
+end
+
+tux-sw3#

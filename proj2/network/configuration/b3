@@ -1,0 +1,106 @@
+
+!
+! Last configuration change at 16:20:52 UTC Tue Jan 11 2022 by root
+!
+version 15.0
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname tux-rtr3
+!
+boot-start-marker
+boot-end-marker
+!
+logging buffered 51200 warnings
+!
+no aaa new-model
+!
+no ipv6 cef
+ip source-route
+ip cef
+!
+!
+!
+!
+no ip domain lookup
+multilink bundle-name authenticated
+!
+!
+!
+!
+license udi pid CISCO2901/K9 sn FCZ1415C11L
+license boot module c2900 technology-package datak9
+!
+!
+username root privilege 15 secret 5 $1$weZl$0ox7FYvzG/5oNRLM5udI4/
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0
+ description $ETH-LAN$$ETH-SW-LAUNCH$$INTF-INFO-GE 0/0$
+ ip address 172.16.31.254 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/1
+ ip address 172.16.1.39 255.255.255.0
+ ip nat outside
+ ip virtual-reassembly
+ duplex auto
+ speed auto
+!
+interface Serial0/0/0
+ no ip address
+ shutdown
+ clock rate 2000000
+!
+interface Serial0/0/1
+ no ip address
+ shutdown
+ clock rate 2000000
+!
+ip forward-protocol nd
+!
+ip http server
+ip http access-class 23
+ip http authentication local
+ip http secure-server
+ip http timeout-policy idle 60 life 86400 requests 10000
+!
+ip nat pool ovrld 172.16.1.39 172.16.1.39 prefix-length 24
+ip nat inside source list 1 pool ovrld overload
+ip route 0.0.0.0 0.0.0.0 172.16.1.254
+ip route 172.16.30.0 255.255.255.0 172.16.31.253
+!
+access-list 1 permit 172.16.30.0 0.0.0.7
+access-list 1 permit 172.16.31.0 0.0.0.7
+access-list 23 permit 10.10.10.0 0.0.0.7
+access-list 23 permit 172.16.0.0 0.0.1.255
+!
+!
+!
+control-plane
+!
+!
+line con 0
+ login local
+line aux 0
+line vty 0 4
+ access-class 23 in
+ privilege level 15
+ login local
+ transport input telnet ssh
+line vty 5 15
+ access-class 23 in
+ privilege level 15
+ login local
+ transport input telnet ssh
+!
+scheduler allocate 20000 1000
+end
